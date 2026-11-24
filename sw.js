@@ -1,10 +1,10 @@
 /* =========================================================
-   Galib TV — service worker
-   PWA shell cache with network-first updates, so a new
-   version.js is always picked up when the user is online.
+   Galib TV — Service Worker (v3)
+   Network-first shell cache so admin updates and version.js
+   changes are always picked up immediately when online.
    ========================================================= */
 
-const CACHE = "galibtv-shell";
+const CACHE = "galibtv-shell-v3";
 
 const ASSETS = [
   "./",
@@ -13,8 +13,6 @@ const ASSETS = [
   "assets/css/style.css",
   "assets/favicon-32.png",
   "assets/logo.webp",
-  "assets/logo.png",
-  "assets/brand-mark.png",
   "assets/icons/icon.svg",
   "assets/icons/icon-192.png",
   "assets/icons/icon-512.png",
@@ -29,7 +27,6 @@ const ASSETS = [
   "assets/js/version.js",
   "assets/js/config.js",
   "assets/js/app.js",
-  "sample/demo.m3u",
 ];
 
 self.addEventListener("install", (event) => {
@@ -40,8 +37,8 @@ self.addEventListener("install", (event) => {
         ASSETS.map(async (path) => {
           try {
             await cache.add(new URL(path, self.registration.scope).href);
-          } catch (err) {
-            /* A missing optional file should never break installation. */
+          } catch {
+            /* Ignore missing optional assets. */
           }
         })
       );
@@ -71,22 +68,30 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  event.respondWith(networkFirst(request));
+  /* Always fetch version.js directly from network without caching */
+  if (url.pathname.endsWith("/version.js") || url.pathname.endsWith("version.js")) {
+    event.respondWith(fetch(request, { cache: "no-store" }));
+    return;
+  }
+
+  event.respondWith(networkFirst(request, url));
 });
 
-async function networkFirst(request) {
+async function networkFirst(request, url) {
   const cache = await caches.open(CACHE);
+  /* Normalize cache key by stripping ?v=...&t=... cache-busting params */
+  const cleanUrl = url.origin + url.pathname;
 
   try {
     const response = await fetch(request, { cache: "no-store" });
     if (response && response.ok && response.type === "basic") {
       try {
-        await cache.put(request, response.clone());
+        await cache.put(cleanUrl, response.clone());
       } catch {}
     }
     return response;
   } catch (err) {
-    const cached = await cache.match(request);
+    const cached = (await cache.match(cleanUrl)) || (await cache.match(request));
     if (cached) return cached;
 
     if (request.mode === "navigate") {

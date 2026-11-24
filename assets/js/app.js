@@ -1,7 +1,8 @@
 /* =========================================================
-   Galib TV — application
-   Home + watch views, merged playlists, favourites, backups,
-   PWA updates and version-based hard reload.
+   Galib TV — OTT Application Engine (v3.0)
+   Admin-first lineup sync, multi-backup auto-fallback,
+   OTT server switcher, favourites/recent rails, Show All,
+   mobile bottom nav, and version-based PWA hard reload.
    ========================================================= */
 (function (global) {
   "use strict";
@@ -10,25 +11,15 @@
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 
   const CFG = global.GTV_CONFIG || {};
-  const APP_VERSION = global.GTV_APP_VERSION || "0.0.0";
+  const APP_VERSION = global.GTV_APP_VERSION || "3.0.0";
   const BUILD_DATE = global.GTV_BUILD_DATE || "";
   const VERSION_FILE = "assets/js/version.js";
   const PAGE_HOME = 60;
   const PAGE_RAIL = 60;
 
-  const DEMOS = [
-    { label: "Bangladesh", name: "Bangladesh TV", url: "https://iptv-org.github.io/iptv/countries/bd.m3u" },
-    { label: "News", name: "News channels", url: "https://iptv-org.github.io/iptv/categories/news.m3u" },
-    { label: "Music", name: "Music channels", url: "https://iptv-org.github.io/iptv/categories/music.m3u" },
-    { label: "Movies", name: "Movie channels", url: "https://iptv-org.github.io/iptv/categories/movies.m3u" },
-    { label: "Sports", name: "Sports channels", url: "https://iptv-org.github.io/iptv/categories/sports.m3u" },
-    { label: "Kids", name: "Kids channels", url: "https://iptv-org.github.io/iptv/categories/kids.m3u" },
-    { label: "All", name: "iptv-org — all channels", url: "https://iptv-org.github.io/iptv/index.m3u" },
-  ];
-
   const ICONS = {
     tv: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 21h8M12 17.5V21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 8.4c0-.6.7-1 1.2-.7l3.9 2.5c.5.3.5 1 0 1.3l-3.9 2.5c-.5.3-1.2-.1-1.2-.7V8.4Z" fill="currentColor"/></svg>',
-    star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.8l5.9-.9L12 3.6Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
+    star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.8l5.9-.9L12 3.6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
     clock: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
     search: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 0 1 5.9 12.1l4.3 4.3-1.4 1.4-4.3-4.3A7.5 7.5 0 1 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z" fill="currentColor"/></svg>',
     play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5c0-.8.9-1.3 1.6-.9l8 6.5c.6.5.6 1.3 0 1.8l-8 6.5c-.7.4-1.6 0-1.6-.9v-13Z" fill="currentColor"/></svg>',
@@ -47,20 +38,29 @@
     themeBtn: $("#btn-theme"),
     settingsBtn: $("#btn-settings"),
     refreshAppBtn: $("#btn-refresh-app"),
+    bottomNavBtns: $$("[data-bnav]"),
 
+    heroTitle: $("#hero-title"),
+    heroSub: $("#hero-sub"),
     heroStats: $("#hero-stats"),
+    watchFirstBtn: $("#btn-watch-first"),
     resumeBtn: $("#btn-resume"),
-    homeDemoBtn: $("#btn-home-demo"),
     favSection: $("#fav-section"),
     favCount: $("#fav-count"),
     favRow: $("#fav-row"),
+    recentSection: $("#recent-section"),
+    recentCount: $("#recent-count"),
+    recentRow: $("#recent-row"),
     browseCount: $("#browse-count"),
+    playlistFilterWrap: $("#playlist-filter-wrap"),
     playlistFilter: $("#playlist-filter"),
     refreshAllBtn: $("#btn-refresh-all"),
     catBar: $("#cat-bar"),
     channelGrid: $("#channel-grid"),
     gridMore: $("#grid-more"),
     gridMoreBtn: $("#btn-grid-more"),
+    gridAllBtn: $("#btn-grid-all"),
+    footerVersion: $("#footer-version"),
 
     video: $("#video"),
     videoWrap: $("#video-wrap"),
@@ -87,17 +87,16 @@
     pipBtn: $("#btn-pip"),
     fullBtn: $("#btn-full"),
     retryBtn: $("#btn-retry"),
-    streamMeta: $("#stream-meta"),
-    streamUrl: $("#stream-url"),
+    sourceBar: $("#source-bar"),
+    sourcePills: $("#source-pills"),
     backupBtn: $("#btn-backup"),
     copyBtn: $("#btn-copy"),
-
     hintHome: $("#btn-hint-home"),
-    hintNote: $("#hint-note"),
 
     railLabel: $("#rail-label"),
     railTabs: $$(".rail-tabs [data-tab]"),
     groupFilter: $("#group-filter"),
+    railPlaylistWrap: $("#rail-playlist-wrap"),
     playlistSelect: $("#playlist-select"),
     reloadPlaylist: $("#btn-reload-playlist"),
     list: $("#channel-list"),
@@ -119,7 +118,6 @@
     formText: $("#form-text"),
     inTextName: $("#in-text-name"),
     inText: $("#in-text"),
-    quickPicks: $("#quick-picks"),
 
     modalSettings: $("#modal-settings"),
     setPlaylistProxy: $("#set-playlist-proxy"),
@@ -156,11 +154,13 @@
     settings: G.store.DEFAULT_SETTINGS,
 
     current: null,
+    servers: [],
+    serverIndex: 0,
+    failedServers: new Set(),
     playingUrl: "",
     usingBackup: false,
-    backupIndex: 0,
     fallbackBusy: false,
-    playGen: 0,
+    lastVia: "",
     blockedToastShown: false,
 
     view: "home",
@@ -172,6 +172,7 @@
 
     homeList: [],
     homeShown: 0,
+    homeRenderToken: 0,
     railList: [],
     railShown: 0,
 
@@ -201,17 +202,21 @@
     hydrate();
     migrateSaved();
     applyTheme(G.store.getTheme());
+    applyBrandConfig();
     setVersionLabel();
-    player = new G.Player(els.video, { onState: onPlayerState, onQuality: onQuality });
+    player = new G.Player(els.video, { onState: onPlayerState });
     bindEvents();
-    buildQuickPicks();
     setupPWA();
+
+    if (CFG.allowUserPlaylists === false && els.addBtn) {
+      els.addBtn.hidden = true;
+    }
 
     rebuildMerged();
     renderAll();
     setStatus("Ready");
 
-    await ensureDefaults();
+    const defaultsChanged = await ensureDefaults();
     await loadCachedAll();
     state.loading = false;
     rebuildMerged();
@@ -220,10 +225,10 @@
     const versionChanged =
       !!G.store.getSeenVersion() && G.store.getSeenVersion() !== APP_VERSION;
 
-    if (!state.channels.length) {
-      state.loading = true;
+    if (!state.channels.length || defaultsChanged) {
+      state.loading = !state.channels.length;
       renderHome();
-      setStatus("Loading channels", "busy");
+      setStatus("Loading lineup", "busy");
       await refreshAll({ force: true, initial: true, silent: true });
       state.loading = false;
     } else {
@@ -244,7 +249,11 @@
     state.settings = G.store.getSettings();
   }
 
-  /* Keep favourites/recents stable: URL-based channel ids. */
+  function applyBrandConfig() {
+    const b = CFG.brand || {};
+    if (b.subtitle && els.heroSub) els.heroSub.textContent = b.subtitle;
+  }
+
   function migrateSaved() {
     const fix = (list) => {
       const seen = new Set();
@@ -270,21 +279,26 @@
     }
   }
 
-  /* ============================== default playlists ============================== */
+  /* ============================== admin default sync ============================== */
 
   async function ensureDefaults() {
     const defs = Array.isArray(CFG.defaultPlaylists)
       ? CFG.defaultPlaylists.filter((p) => p && p.url && p.enabled !== false)
       : [];
-    if (!defs.length) return false;
-    if (state.playlists.length && CFG.ensureDefaults !== true) return false;
+    if (!defs.length && CFG.syncRemovedDefaults !== true) return false;
+    if (state.playlists.length && CFG.ensureDefaults !== true && CFG.syncRemovedDefaults !== true) return false;
 
     let changed = false;
+    const activeDefaultIds = new Set();
+    const activeDefaultUrls = new Set();
+
     for (const item of defs) {
       const url = normalizeUrl(item.url);
       if (!url) continue;
-      const name = (item.name || nameFromUrl(url)).trim() || "Playlist";
+      const name = (item.name || nameFromUrl(url)).trim() || "Galib TV Lineup";
       const configId = item.id ? String(item.id) : "";
+      if (configId) activeDefaultIds.add(configId);
+      activeDefaultUrls.add(url);
 
       let meta =
         (configId && state.playlists.find((p) => p.configId === configId)) ||
@@ -302,7 +316,8 @@
           updatedAt: 0,
           source: "default",
         };
-        state.playlists.push(meta);
+        /* Admin default playlists always stay first in the list */
+        state.playlists.unshift(meta);
         changed = true;
       } else {
         if (configId && meta.configId !== configId) {
@@ -314,7 +329,7 @@
           meta.updatedAt = 0;
           meta.count = 0;
           state.cache.delete(meta.id);
-          G.store.deleteCachedChannels(meta.id);
+          await G.store.deleteCachedChannels(meta.id);
           changed = true;
         }
         if (item.name && meta.name !== name) {
@@ -325,6 +340,25 @@
           meta.source = "default";
           changed = true;
         }
+      }
+    }
+
+    /* Remove old default playlists if admin removed or disabled them in config.js */
+    if (CFG.syncRemovedDefaults === true) {
+      const removed = state.playlists.filter((p) => {
+        if (p.source !== "default") return false;
+        const matchId = p.configId && activeDefaultIds.has(p.configId);
+        const matchUrl = p.url && activeDefaultUrls.has(p.url);
+        return !matchId && !matchUrl;
+      });
+      if (removed.length) {
+        for (const r of removed) {
+          state.cache.delete(r.id);
+          await G.store.deleteCachedChannels(r.id);
+        }
+        const removedIds = new Set(removed.map((r) => r.id));
+        state.playlists = state.playlists.filter((p) => !removedIds.has(p.id));
+        changed = true;
       }
     }
 
@@ -352,7 +386,12 @@
   function rebuildMerged() {
     const seen = new Set();
     const list = [];
-    state.playlists.forEach((pl) => {
+    /* Admin default playlists first, then any user-added playlists */
+    const ordered = state.playlists
+      .slice()
+      .sort((a, b) => (a.source === "default" ? -1 : 1) - (b.source === "default" ? -1 : 1));
+
+    ordered.forEach((pl) => {
       const channels = state.cache.get(pl.id) || [];
       channels.forEach((raw) => {
         const url = raw && raw.url;
@@ -374,11 +413,74 @@
     state.byId = new Map(list.map((c) => [c.id, c]));
   }
 
+  /* ============================== admin + user backups ============================== */
+
+  function getAdminBackupsForChannel(ch) {
+    if (!ch || !CFG.channelBackups || typeof CFG.channelBackups !== "object") return [];
+    const map = CFG.channelBackups;
+    const targetName = (ch.name || "").trim().toLowerCase();
+    const targetUrl = (ch.url || "").trim();
+    const collected = [];
+
+    Object.keys(map).forEach((key) => {
+      const k = key.trim();
+      if (!k) return;
+      const matches = k === targetUrl || k.toLowerCase() === targetName;
+      if (!matches) return;
+
+      const entries = Array.isArray(map[key]) ? map[key] : [map[key]];
+      entries.forEach((entry) => {
+        if (typeof entry === "string") {
+          const u = normalizeUrl(entry);
+          if (u) collected.push({ url: u, label: "", source: "admin" });
+        } else if (entry && typeof entry === "object" && entry.url) {
+          const u = normalizeUrl(entry.url);
+          if (u) collected.push({ url: u, label: String(entry.label || "").trim(), source: "admin" });
+        }
+      });
+    });
+
+    return collected;
+  }
+
+  function getChannelServers(ch) {
+    if (!ch || !ch.url) return [];
+    const seen = new Set([ch.url]);
+    const servers = [{ url: ch.url, label: "Server 1 (Main)", source: "main" }];
+
+    let num = 2;
+    getAdminBackupsForChannel(ch).forEach((item) => {
+      if (seen.has(item.url)) return;
+      seen.add(item.url);
+      servers.push({
+        url: item.url,
+        label: item.label || "Server " + num,
+        source: "admin",
+      });
+      num++;
+    });
+
+    const userList = state.backups[ch.id] || [];
+    userList.forEach((rawUrl) => {
+      const u = normalizeUrl(rawUrl);
+      if (!u || seen.has(u)) return;
+      seen.add(u);
+      servers.push({
+        url: u,
+        label: "Backup " + num,
+        source: "user",
+      });
+      num++;
+    });
+
+    return servers;
+  }
+
   /* ============================== refresh ============================== */
 
   function autoRefreshMs() {
     const minutes = Number(CFG.autoRefreshMinutes);
-    return (Number.isFinite(minutes) && minutes > 0 ? minutes : 20) * 60000;
+    return (Number.isFinite(minutes) && minutes > 0 ? minutes : 15) * 60000;
   }
 
   function shouldRefresh(pl) {
@@ -394,7 +496,7 @@
       custom: state.settings.customProxy,
       onAttempt: (id) => {
         if (!quiet) {
-          setStatus(id === "direct" ? "Fetching playlist…" : "Trying " + G.net.label(id) + "…", "busy");
+          setStatus(id === "direct" ? "Fetching lineup…" : "Trying " + G.net.label(id) + "…", "busy");
         }
       },
     };
@@ -404,12 +506,13 @@
     if (!pl || !pl.url) throw new Error("This playlist has no URL.");
     const res = await G.net.fetchPlaylist(pl.url, proxyOptions(opts.quiet));
     const channels = G.m3u.parse(res.text);
-    if (!channels.length) throw new Error("This playlist has no channels.");
+    if (!channels.length) throw new Error("No channels found in playlist.");
 
     state.cache.set(pl.id, channels);
     pl.count = channels.length;
     pl.updatedAt = Date.now();
     pl.lastVia = res.via;
+    state.lastVia = res.via;
     G.store.savePlaylists(state.playlists);
     await G.store.cacheChannels(pl.id, channels);
     return channels;
@@ -418,7 +521,7 @@
   async function refreshAll(opts = {}) {
     const { force = false, background = false, silent = false, ids = null } = opts;
     if (state.refreshing) {
-      if (!background) toast("A refresh is already running…", "warn");
+      if (!background) toast("Refreshing channels…", "warn");
       return false;
     }
 
@@ -428,7 +531,7 @@
 
     state.lastRefreshAt = Date.now();
     if (!targets.length) {
-      if (!silent && !background) toast("Channel lists are already up to date.", "ok");
+      if (!silent && !background) toast("Channels are already up to date.", "ok");
       return true;
     }
 
@@ -448,7 +551,7 @@
       } catch (err) {
         fail++;
         console.warn("[GalibTV] playlist refresh failed", pl.name, err);
-        if (!background && !silent) toast(pl.name + ": " + friendlyError(err), "err", 8000);
+        if (!background && !silent) toast(pl.name + ": " + friendlyError(err), "err", 7000);
       }
       if (!background) {
         rebuildMerged();
@@ -465,19 +568,12 @@
     if (!background) {
       if (ok && !fail) {
         setStatus("Ready");
-        if (!silent) {
-          toast(
-            "Updated " + ok + " playlist" + (ok === 1 ? "" : "s") + " · " +
-              state.channels.length.toLocaleString() + " channels",
-            "ok"
-          );
-        }
+        if (!silent) toast("Lineup updated · " + state.channels.length.toLocaleString() + " live channels", "ok");
       } else if (fail && !ok) {
-        setStatus("Refresh failed", "error");
-        if (!silent) toast("Could not refresh the channel lists.", "err");
+        setStatus("Offline", "error");
+        if (!silent) toast("Could not refresh the channel lineup.", "err");
       } else {
         setStatus("Ready");
-        if (!silent) toast("Updated " + ok + ", failed " + fail + ".", "warn");
       }
     } else if (ok) {
       setStatus("Ready");
@@ -489,8 +585,12 @@
   /* ============================== events ============================== */
 
   function bindEvents() {
-    els.addBtn.addEventListener("click", openAddModal);
-    $$("[data-open-add]").forEach((b) => b.addEventListener("click", openAddModal));
+    if (els.addBtn) {
+      els.addBtn.addEventListener("click", () => {
+        closeModal(els.modalSettings);
+        openAddModal();
+      });
+    }
     els.settingsBtn.addEventListener("click", openSettings);
     els.themeBtn.addEventListener("click", toggleTheme);
     els.refreshAppBtn.addEventListener("click", () => checkForUpdate(true));
@@ -503,19 +603,25 @@
     els.backBtn.addEventListener("click", () => showHome(true));
     els.hintHome.addEventListener("click", () => showHome(true));
     els.idleHome.addEventListener("click", () => showHome(true));
+    els.watchFirstBtn.addEventListener("click", watchFirstChannel);
     els.resumeBtn.addEventListener("click", resumeLast);
-    els.homeDemoBtn.addEventListener("click", loadDemo);
+
+    els.bottomNavBtns.forEach((btn) =>
+      btn.addEventListener("click", () => onBottomNav(btn.dataset.bnav))
+    );
 
     els.search.addEventListener("input", onSearchInput);
     els.search.addEventListener("keydown", onSearchKey);
 
     els.refreshAllBtn.addEventListener("click", () => refreshAll({ force: true }));
     els.gridMoreBtn.addEventListener("click", appendHomePage);
+    if (els.gridAllBtn) els.gridAllBtn.addEventListener("click", showAllHomeChannels);
     els.moreBtn.addEventListener("click", appendRailPage);
 
     els.catBar.addEventListener("click", onCatClick);
     els.channelGrid.addEventListener("click", onGridClick);
     els.favRow.addEventListener("click", onGridClick);
+    els.recentRow.addEventListener("click", onGridClick);
     els.list.addEventListener("click", onRailClick);
     els.list.addEventListener("keydown", onRailKey);
 
@@ -532,18 +638,29 @@
     els.reloadPlaylist.addEventListener("click", refreshCurrentFilter);
 
     els.favBtn.addEventListener("click", () => {
-      if (!state.current) return toast("Play or pick a channel first.", "warn");
+      if (!state.current) return toast("Select a channel first.", "warn");
       toggleFavoriteById(state.current.id);
     });
-    els.retryBtn.addEventListener("click", () => retryPrimary(false));
+    els.retryBtn.addEventListener("click", () => retryCurrentServer(false));
     els.muteBtn.addEventListener("click", toggleMute);
     els.pipBtn.addEventListener("click", togglePip);
     els.fullBtn.addEventListener("click", toggleFullscreen);
-    els.errorRetry.addEventListener("click", () => retryPrimary(false));
-    els.errorProxy.addEventListener("click", () => retryCurrentWithProxy());
+    els.errorRetry.addEventListener("click", () => retryAllServers());
+    els.errorProxy.addEventListener("click", () => retryCurrentServer(true));
     els.errorBackup.addEventListener("click", openBackupModal);
     els.backupBtn.addEventListener("click", openBackupModal);
     els.copyBtn.addEventListener("click", copyStreamUrl);
+
+    els.sourcePills.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-server-idx]");
+      if (!btn || !state.current) return;
+      const idx = Number(btn.dataset.serverIdx);
+      if (Number.isFinite(idx) && state.servers[idx]) {
+        state.failedServers.delete(idx);
+        startServerIndex(idx, { proxyFirst: false });
+      }
+    });
+
     els.video.addEventListener("volumechange", () => {
       els.muteBtn.classList.toggle("is-active", els.video.muted || els.video.volume === 0);
     });
@@ -624,6 +741,37 @@
     document.addEventListener("keydown", onKeyDown);
   }
 
+  /* ============================== mobile bottom nav ============================== */
+
+  function setBottomNavActive(key) {
+    els.bottomNavBtns.forEach((b) => b.classList.toggle("is-active", b.dataset.bnav === key));
+  }
+
+  function onBottomNav(action) {
+    if (action === "home") {
+      setBottomNavActive("home");
+      if (state.view !== "home") showHome(true);
+      else window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (action === "fav") {
+      setBottomNavActive("fav");
+      if (state.view === "watch") {
+        setRailTab("fav");
+        els.rail.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (state.favorites.length) {
+        els.favSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        toast("Tap the ★ icon on any channel to add it to Favourites.", "ok");
+      }
+    } else if (action === "search") {
+      setBottomNavActive("search");
+      if (state.view !== "home") showHome(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => els.search.focus(), 120);
+    } else if (action === "settings") {
+      openSettings();
+    }
+  }
+
   /* ============================== views ============================== */
 
   function showWatch(pushHistory, id) {
@@ -646,11 +794,10 @@
     els.homeView.hidden = false;
     els.backBtn.hidden = true;
     document.body.classList.remove("is-watch");
+    setBottomNavActive("home");
 
     if (wasWatch && els.video && !els.video.paused) {
-      try {
-        els.video.pause();
-      } catch {}
+      try { els.video.pause(); } catch {}
     }
 
     if (pushHistory !== false && wasWatch) {
@@ -661,7 +808,7 @@
     state.catExpanded = false;
     renderHome();
     setStatus("Ready");
-    document.title = "Galib TV — Web IPTV Player";
+    document.title = "Galib TV — Live OTT Streaming";
     window.scrollTo({ top: 0, behavior: "auto" });
   }
 
@@ -675,11 +822,8 @@
     const id = parseHashId();
     if (!id) return;
     const ch = findChannel(id);
-    if (ch) {
-      playChannel(ch, { history: false });
-    } else {
-      history.replaceState({ gtv: "home" }, "", location.pathname + location.search);
-    }
+    if (ch) playChannel(ch, { history: false });
+    else history.replaceState({ gtv: "home" }, "", location.pathname + location.search);
   }
 
   function onPopState() {
@@ -694,6 +838,12 @@
     showHome(false);
   }
 
+  function watchFirstChannel() {
+    const first = state.favorites[0] || state.homeList[0] || state.channels[0];
+    if (first) playChannel(findChannel(first.id) || first);
+    else toast("Channel lineup is still loading…", "warn");
+  }
+
   function resumeLast() {
     if (state.current) {
       showWatch(true, state.current.id);
@@ -701,7 +851,7 @@
       if (p && typeof p.catch === "function") {
         p.catch(() => {
           setStatus("Press play");
-          toast("Press play on the video to resume.", "warn");
+          toast("Tap play on the video to resume.", "warn");
         });
       }
       return;
@@ -709,10 +859,10 @@
     const last = state.recent[0];
     const ch = last ? findChannel(last.id) || last : null;
     if (ch) playChannel(ch);
-    else toast("Nothing to resume yet.", "warn");
+    else watchFirstChannel();
   }
 
-  /* ============================== playback ============================== */
+  /* ============================== playback & sequential backup fallback ============================== */
 
   function playChannel(channel, opts = {}) {
     if (!channel || !channel.url) return;
@@ -720,9 +870,9 @@
     const ch = canonical ? Object.assign({}, channel, canonical) : channel;
 
     state.current = ch;
-    state.playingUrl = ch.url;
-    state.usingBackup = false;
-    state.backupIndex = 0;
+    state.servers = getChannelServers(ch);
+    state.serverIndex = 0;
+    state.failedServers = new Set();
     state.fallbackBusy = false;
     state.blockedToastShown = false;
 
@@ -742,52 +892,55 @@
     renderRail(true);
     updateCurrentUI();
     updateNowPlaying(ch);
-    updateBackupButton();
-    startCurrent(ch.url, { backup: false, proxyFirst: false });
+    renderServerPills();
+    startServerIndex(0, { proxyFirst: false });
   }
 
-  function retryPrimary(proxyFirst) {
-    if (!state.current) return toast("Choose a channel first.", "warn");
-    state.backupIndex = 0;
-    startCurrent(state.current.url, { backup: false, proxyFirst: !!proxyFirst });
-  }
-
-  function retryCurrentWithProxy() {
+  function retryAllServers() {
     if (!state.current) return;
-    state.backupIndex = 0;
-    startCurrent(state.playingUrl || state.current.url, {
-      backup: state.usingBackup,
-      proxyFirst: true,
-    });
+    state.servers = getChannelServers(state.current);
+    state.failedServers = new Set();
+    startServerIndex(0, { proxyFirst: false });
   }
 
-  function startCurrent(url, opts = {}) {
-    if (!state.current || !url) return;
-    state.playingUrl = url;
-    state.usingBackup = !!opts.backup;
+  function retryCurrentServer(proxyFirst) {
+    if (!state.current) return toast("Select a channel first.", "warn");
+    state.failedServers.delete(state.serverIndex);
+    startServerIndex(state.serverIndex, { proxyFirst: !!proxyFirst });
+  }
+
+  function startServerIndex(idx, opts = {}) {
+    if (!state.current) return;
+    const srv = state.servers[idx] || state.servers[0];
+    if (!srv) return;
+
+    state.serverIndex = idx;
+    state.playingUrl = srv.url;
+    state.usingBackup = idx > 0;
     state.fallbackBusy = false;
 
-    const channel = Object.assign({}, state.current, { url });
-    const live = isLiveKind(url);
+    const channel = Object.assign({}, state.current, { url: srv.url });
+    const live = isLiveKind(srv.url);
 
     els.errorBox.hidden = true;
     els.idle.hidden = true;
     els.spinner.hidden = false;
-    els.spinnerText.textContent = state.usingBackup ? "Trying backup stream…" : "Connecting to stream…";
+    els.spinnerText.textContent =
+      idx > 0 ? "Connecting to " + srv.label + "…" : "Connecting to live stream…";
     els.liveBadge.hidden = !live;
     els.qualityBadge.hidden = true;
     els.backupBadge.hidden = !state.usingBackup;
-    els.streamUrl.textContent = url;
-    els.streamUrl.title = url;
+    if (state.usingBackup) els.backupBadge.textContent = srv.label.toUpperCase();
     els.screenTitle.textContent = state.current.name;
+
+    renderServerPills();
     updateBackupButton();
 
     const wrap = streamWrapper();
-    const mixedContent = location.protocol === "https:" && /^http:\/\//i.test(url);
+    const mixedContent = location.protocol === "https:" && /^http:\/\//i.test(srv.url);
     const useProxyFirst =
       !!opts.proxyFirst || (!!wrap && (mixedContent || state.settings.streamProxy === "always"));
 
-    state.playGen++;
     player.play(channel, {
       wrap,
       useProxyFirst,
@@ -795,7 +948,55 @@
       lowLatency: state.settings.lowLatency,
     });
 
-    setStatus(state.usingBackup ? "Backup stream" : "Connecting", "busy");
+    setStatus(state.usingBackup ? srv.label : "Connecting", "busy");
+  }
+
+  function maybeTryNextServer() {
+    if (!state.current || state.fallbackBusy) return false;
+    state.failedServers.add(state.serverIndex);
+    renderServerPills();
+
+    /* Find next untried server in sequence */
+    let nextIdx = -1;
+    for (let i = state.serverIndex + 1; i < state.servers.length; i++) {
+      if (!state.failedServers.has(i)) {
+        nextIdx = i;
+        break;
+      }
+    }
+    if (nextIdx < 0) return false;
+
+    const nextSrv = state.servers[nextIdx];
+    state.fallbackBusy = true;
+    toast("Switching to " + nextSrv.label + "…", "warn", 3200);
+    setStatus("Trying " + nextSrv.label, "busy");
+
+    setTimeout(() => {
+      state.fallbackBusy = false;
+      if (state.current) startServerIndex(nextIdx, { proxyFirst: false });
+    }, 260);
+    return true;
+  }
+
+  function renderServerPills() {
+    if (!els.sourceBar || !els.sourcePills) return;
+    if (!state.current) {
+      els.sourceBar.hidden = true;
+      return;
+    }
+    els.sourceBar.hidden = false;
+    els.sourcePills.textContent = "";
+
+    state.servers.forEach((srv, idx) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "srv-pill";
+      if (idx === state.serverIndex) btn.classList.add("is-active");
+      if (state.failedServers.has(idx)) btn.classList.add("is-failed");
+      btn.dataset.serverIdx = String(idx);
+      btn.textContent = srv.label;
+      els.sourcePills.appendChild(btn);
+    });
   }
 
   function streamWrapper() {
@@ -816,11 +1017,11 @@
     switch (type) {
       case "loading":
         els.spinner.hidden = false;
-        els.spinnerText.textContent = data.message || "Connecting to stream…";
+        els.spinnerText.textContent = data.message || "Connecting to live stream…";
         els.errorBox.hidden = true;
         els.idle.hidden = true;
         els.liveBadge.hidden = true;
-        setStatus(data.proxied ? "Retrying via proxy" : "Connecting", "busy");
+        setStatus(data.proxied ? "Via proxy" : "Connecting", "busy");
         break;
 
       case "playing":
@@ -850,10 +1051,10 @@
 
       case "blocked":
         els.spinner.hidden = true;
-        setStatus("Press play");
+        setStatus("Tap play");
         if (!state.blockedToastShown) {
           state.blockedToastShown = true;
-          toast("Autoplay was blocked — press play on the video.", "warn");
+          toast("Tap the play button on the video to start.", "warn");
         }
         break;
 
@@ -872,7 +1073,7 @@
         els.spinner.hidden = true;
         els.liveBadge.hidden = true;
         els.qualityBadge.hidden = true;
-        if (maybeTryBackup()) return;
+        if (maybeTryNextServer()) return;
         showPlayerError(data);
         break;
 
@@ -889,45 +1090,17 @@
     }
   }
 
-  function onQuality(_type, data) {
-    if (data && data.label) {
-      els.qualityBadge.textContent = data.label;
-      els.qualityBadge.hidden = false;
-    }
-  }
-
-  function maybeTryBackup() {
-    if (!state.current || state.fallbackBusy) return false;
-    const list = state.backups[state.current.id] || [];
-    if (!list.length || state.backupIndex >= list.length) return false;
-
-    const next = list[state.backupIndex];
-    state.backupIndex++;
-    state.fallbackBusy = true;
-
-    toast(
-      "“" + state.current.name + "” failed — trying backup " + state.backupIndex + "/" + list.length + "…",
-      "warn",
-      4500
-    );
-    setStatus("Trying backup", "busy");
-
-    setTimeout(() => {
-      state.fallbackBusy = false;
-      if (state.current) startCurrent(next, { backup: true });
-    }, 280);
-    return true;
-  }
-
   function showPlayerError(data) {
-    const tried = state.backupIndex;
-    els.errorTitle.textContent = tried ? "Stream and backups failed" : data.title || "Stream failed to load";
-    els.errorText.textContent = tried
-      ? "Tried " + tried + " backup stream" + (tried === 1 ? "" : "s") + " without success. The channel may be offline or geo-blocked."
-      : data.text || "The channel may be offline, geo-blocked, or missing CORS headers.";
+    const total = state.servers.length;
+    els.errorTitle.textContent =
+      total > 1 ? "All " + total + " servers unavailable" : data.title || "Stream unavailable";
+    els.errorText.textContent =
+      total > 1
+        ? "Tried main and all backup servers without response. You can retry or add a new backup link."
+        : data.text || "This channel may be offline, BDIX-only, or blocked on HTTPS.";
     els.errorBox.hidden = false;
     els.spinner.hidden = true;
-    setStatus("Stream error", "error");
+    setStatus("Unavailable", "error");
   }
 
   function isLiveKind(url) {
@@ -948,21 +1121,17 @@
       els.nowSub.textContent = "Pick a channel from the list";
       setLogo(els.nowLogo, null);
       els.favBtn.classList.remove("is-active");
-      els.favBtn.title = "Add to favourites";
-      els.streamMeta.hidden = true;
-      els.streamUrl.textContent = "";
-      document.title = "Galib TV — Web IPTV Player";
+      els.sourceBar.hidden = true;
+      document.title = "Galib TV — Live OTT Streaming";
       return;
     }
     els.nowTitle.textContent = channel.name;
-    els.nowSub.textContent = [channel.group, channel.playlistName].filter(Boolean).join(" · ") || "Live TV";
+    els.nowSub.textContent = channel.group || "Live TV";
     setLogo(els.nowLogo, channel);
     const fav = isFavorite(channel.id);
     els.favBtn.classList.toggle("is-active", fav);
     els.favBtn.title = fav ? "Remove from favourites" : "Add to favourites";
-    els.streamMeta.hidden = false;
-    els.streamUrl.textContent = state.playingUrl || channel.url;
-    els.streamUrl.title = state.playingUrl || channel.url;
+    renderServerPills();
     updateBackupButton();
   }
 
@@ -1016,8 +1185,9 @@
 
   function addRecent(channel) {
     const snap = channelSnapshot(channel);
-    state.recent = [snap].concat(state.recent.filter((c) => c.id !== snap.id)).slice(0, 40);
+    state.recent = [snap].concat(state.recent.filter((c) => c.id !== snap.id)).slice(0, 24);
     G.store.saveRecent(state.recent);
+    renderRecent();
     if (state.railTab === "recent" && state.view === "watch") renderRail(true);
   }
 
@@ -1055,7 +1225,6 @@
     if (state.current) {
       const on = ids.has(state.current.id);
       els.favBtn.classList.toggle("is-active", on);
-      els.favBtn.title = on ? "Remove from favourites" : "Add to favourites";
     }
   }
 
@@ -1068,11 +1237,11 @@
     });
   }
 
-  /* ============================== backups ============================== */
+  /* ============================== backup modal ============================== */
 
   function openBackupModal() {
     if (!state.current) {
-      toast("Play a channel first, then add a backup link.", "warn");
+      toast("Play a channel first to manage backup servers.", "warn");
       return;
     }
     els.backupChannel.textContent =
@@ -1084,10 +1253,7 @@
   }
 
   function saveBackup(rawUrl, playNow) {
-    if (!state.current) {
-      toast("Play a channel first.", "warn");
-      return false;
-    }
+    if (!state.current) return false;
     const url = normalizeUrl(rawUrl);
     if (!url) {
       toast("Enter a valid http(s) stream link.", "warn");
@@ -1101,103 +1267,119 @@
     const id = state.current.id;
     const list = (state.backups[id] || []).slice();
     if (!list.includes(url)) list.push(url);
-    state.backups[id] = list.slice(0, 8);
+    state.backups[id] = list.slice(0, 10);
     G.store.saveBackups(state.backups);
-    toast("Backup link saved", "ok");
+
+    state.servers = getChannelServers(state.current);
+    toast("Backup server saved", "ok");
     renderBackupList();
+    renderServerPills();
     updateBackupButton();
 
     if (playNow) {
       closeModal(els.modalBackup);
-      state.backupIndex = Math.max(0, state.backups[id].indexOf(url) + 1);
-      startCurrent(url, { backup: true });
+      const idx = state.servers.findIndex((s) => s.url === url);
+      if (idx >= 0) {
+        state.failedServers.delete(idx);
+        startServerIndex(idx, { proxyFirst: false });
+      }
     }
     return true;
   }
 
   function renderBackupList() {
     els.backupList.textContent = "";
-    const list = state.current ? state.backups[state.current.id] || [] : [];
-    if (!list.length) {
+    const backupsOnly = state.servers.slice(1);
+    if (!backupsOnly.length) {
       const p = document.createElement("p");
       p.className = "hint";
-      p.textContent = "No backup links saved for this channel yet.";
+      p.textContent = "No backup servers configured for this channel yet.";
       els.backupList.appendChild(p);
       return;
     }
-    list.forEach((url, index) => {
+
+    backupsOnly.forEach((srv, i) => {
+      const serverIdx = i + 1;
       const row = document.createElement("div");
       row.className = "backup-item";
 
-      const code = document.createElement("code");
-      code.className = "backup-url";
-      code.textContent = url;
-      code.title = url;
+      const info = document.createElement("div");
+      info.className = "backup-url";
+      info.title = srv.url;
+      if (srv.source === "admin") {
+        const tag = document.createElement("span");
+        tag.className = "backup-tag";
+        tag.textContent = "Admin";
+        info.appendChild(tag);
+      }
+      info.appendChild(document.createTextNode(srv.label + " · " + srv.url));
 
       const actions = document.createElement("div");
       actions.className = "backup-actions-row";
 
       const play = document.createElement("button");
       play.type = "button";
-      play.className = "mini-btn";
-      play.dataset.backupPlay = String(index);
+      play.className = "mini-btn accent";
+      play.dataset.backupPlayIdx = String(serverIdx);
       play.textContent = "Play";
+      actions.appendChild(play);
 
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.className = "mini-btn danger";
-      remove.dataset.backupRemove = String(index);
-      remove.textContent = "Remove";
+      if (srv.source === "user") {
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "mini-btn danger";
+        remove.dataset.backupRemoveUrl = srv.url;
+        remove.textContent = "Remove";
+        actions.appendChild(remove);
+      }
 
-      actions.append(play, remove);
-      row.append(code, actions);
+      row.append(info, actions);
       els.backupList.appendChild(row);
     });
   }
 
   function onBackupListClick(e) {
     if (!state.current) return;
-    const list = state.backups[state.current.id] || [];
-
-    const playBtn = e.target.closest("[data-backup-play]");
+    const playBtn = e.target.closest("[data-backup-play-idx]");
     if (playBtn) {
-      const index = Number(playBtn.dataset.backupPlay);
-      const url = list[index];
-      if (!url) return;
-      closeModal(els.modalBackup);
-      state.backupIndex = index + 1;
-      startCurrent(url, { backup: true });
+      const idx = Number(playBtn.dataset.backupPlayIdx);
+      if (state.servers[idx]) {
+        closeModal(els.modalBackup);
+        state.failedServers.delete(idx);
+        startServerIndex(idx, { proxyFirst: false });
+      }
       return;
     }
 
-    const removeBtn = e.target.closest("[data-backup-remove]");
+    const removeBtn = e.target.closest("[data-backup-remove-url]");
     if (removeBtn) {
-      const index = Number(removeBtn.dataset.backupRemove);
-      list.splice(index, 1);
+      const targetUrl = removeBtn.dataset.backupRemoveUrl;
+      const list = (state.backups[state.current.id] || []).filter((u) => u !== targetUrl);
       if (list.length) state.backups[state.current.id] = list;
       else delete state.backups[state.current.id];
       G.store.saveBackups(state.backups);
+      state.servers = getChannelServers(state.current);
       renderBackupList();
+      renderServerPills();
       updateBackupButton();
-      toast("Backup link removed");
+      toast("Backup server removed");
     }
   }
 
   function updateBackupButton() {
-    const n = state.current ? (state.backups[state.current.id] || []).length : 0;
-    if (els.backupBtn) {
-      els.backupBtn.textContent = n ? "Backups (" + n + ")" : "Backup";
-      els.backupBtn.title = n ? n + " saved backup stream(s)" : "Add a backup stream";
-    }
+    if (!els.backupBtn) return;
+    const count = Math.max(0, state.servers.length - 1);
+    els.backupBtn.textContent = count ? "+ Backup (" + count + ")" : "+ Backup";
   }
 
-  /* ============================== render: all ============================== */
+  /* ============================== render ============================== */
 
   function renderAll() {
     renderPlaylistSelects();
     renderCatBar();
     syncGroupFilter();
     renderFavourites();
+    renderRecent();
     renderHomeGrid(true);
     renderRail(true);
     updateHero();
@@ -1210,22 +1392,17 @@
     renderCatBar();
     syncGroupFilter();
     renderFavourites();
+    renderRecent();
     renderHomeGrid(true);
     updateHero();
   }
-
-  /* ============================== categories ============================== */
 
   function renderCatBar() {
     const base = state.channels.filter((c) => {
       if (state.playlistFilter !== "all" && c.playlistId !== state.playlistFilter) return false;
       if (!state.query) return true;
       const q = state.query.toLowerCase();
-      return (
-        c.name.toLowerCase().includes(q) ||
-        (c.group || "").toLowerCase().includes(q) ||
-        (c.playlistName || "").toLowerCase().includes(q)
-      );
+      return c.name.toLowerCase().includes(q) || (c.group || "").toLowerCase().includes(q);
     });
 
     const counts = new Map();
@@ -1248,7 +1425,6 @@
     els.catBar.hidden = false;
 
     els.catBar.appendChild(catChip("All", base.length, "all", state.group === "all"));
-
     shown.forEach(([group, count]) => {
       els.catBar.appendChild(catChip(group, count, group, state.group === group));
     });
@@ -1295,8 +1471,6 @@
     renderRail(true);
   }
 
-  /* ============================== channel lists ============================== */
-
   function computeHomeList() {
     let list = state.channels;
     if (state.playlistFilter !== "all") {
@@ -1316,6 +1490,7 @@
   }
 
   function renderHomeGrid(reset) {
+    state.homeRenderToken++;
     state.homeList = computeHomeList();
     if (reset) {
       els.channelGrid.textContent = "";
@@ -1354,6 +1529,33 @@
     updateBrowseCount();
   }
 
+  /* Smooth chunked rendering for "Show all channels" */
+  function showAllHomeChannels() {
+    if (!state.homeList.length || state.homeShown >= state.homeList.length) {
+      els.gridMore.hidden = true;
+      return;
+    }
+    const token = ++state.homeRenderToken;
+    els.gridMore.hidden = true;
+    const CHUNK = 100;
+
+    function step() {
+      if (token !== state.homeRenderToken) return;
+      const end = Math.min(state.homeShown + CHUNK, state.homeList.length);
+      const frag = document.createDocumentFragment();
+      for (let i = state.homeShown; i < end; i++) {
+        frag.appendChild(buildCard(state.homeList[i]));
+      }
+      els.channelGrid.appendChild(frag);
+      state.homeShown = end;
+      updateBrowseCount();
+      if (state.homeShown < state.homeList.length) {
+        requestAnimationFrame(step);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
   function buildCard(ch) {
     const card = document.createElement("article");
     card.className = "card";
@@ -1364,7 +1566,7 @@
     main.type = "button";
     main.className = "card-main";
     main.dataset.play = ch.id;
-    main.setAttribute("aria-label", "Play " + ch.name);
+    main.setAttribute("aria-label", "Watch " + ch.name);
 
     const logo = document.createElement("span");
     logo.className = "card-logo";
@@ -1383,6 +1585,11 @@
       logo.appendChild(img);
     }
 
+    const liveDot = document.createElement("span");
+    liveDot.className = "card-live-dot";
+    liveDot.innerHTML = "<i></i>LIVE";
+    logo.appendChild(liveDot);
+
     const play = document.createElement("span");
     play.className = "card-play";
     play.innerHTML = ICONS.play;
@@ -1395,7 +1602,7 @@
     name.textContent = ch.name;
     const group = document.createElement("span");
     group.className = "card-group";
-    group.textContent = ch.group || "General";
+    group.textContent = ch.group || "Live TV";
     info.append(name, group);
 
     main.append(logo, info);
@@ -1420,9 +1627,21 @@
 
     els.favSection.hidden = !items.length;
     els.favRow.textContent = "";
-    els.favCount.textContent = items.length ? items.length + " saved" : "";
-
+    els.favCount.textContent = items.length ? items.length + " channels" : "";
     items.forEach((ch) => els.favRow.appendChild(buildCard(ch)));
+  }
+
+  function renderRecent() {
+    if (!els.recentSection || !els.recentRow) return;
+    const items = state.recent
+      .map((r) => state.byId.get(r.id) || r)
+      .filter((c) => c && c.url)
+      .slice(0, 12);
+
+    els.recentSection.hidden = !items.length;
+    els.recentRow.textContent = "";
+    if (els.recentCount) els.recentCount.textContent = items.length ? items.length + " recent" : "";
+    items.forEach((ch) => els.recentRow.appendChild(buildCard(ch)));
   }
 
   function computeRailList() {
@@ -1432,18 +1651,10 @@
     else list = state.channels;
 
     list = list.filter((c) => c && c.url);
-
-    if (state.playlistFilter !== "all") {
-      list = list.filter((c) => c.playlistId === state.playlistFilter);
-    }
+    if (state.playlistFilter !== "all") list = list.filter((c) => c.playlistId === state.playlistFilter);
     if (state.query) {
       const q = state.query.toLowerCase();
-      list = list.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          (c.group || "").toLowerCase().includes(q) ||
-          (c.playlistName || "").toLowerCase().includes(q)
-      );
+      list = list.filter((c) => c.name.toLowerCase().includes(q) || (c.group || "").toLowerCase().includes(q));
     }
     if (state.railTab === "all" && state.group !== "all") {
       list = list.filter((c) => (c.group || "General") === state.group);
@@ -1453,7 +1664,6 @@
 
   function renderRail(reset) {
     state.railList = computeRailList();
-
     els.railTabs.forEach((b) => {
       const on = b.dataset.tab === state.railTab;
       b.classList.toggle("is-active", on);
@@ -1499,7 +1709,7 @@
     row.dataset.channel = ch.id;
     row.tabIndex = 0;
     row.setAttribute("role", "button");
-    row.setAttribute("aria-label", "Play " + ch.name);
+    row.setAttribute("aria-label", "Watch " + ch.name);
     if (state.current && state.current.id === ch.id) row.classList.add("is-active");
 
     const logo = document.createElement("span");
@@ -1525,12 +1735,12 @@
     name.textContent = ch.name;
     const group = document.createElement("span");
     group.className = "ch-group";
-    group.textContent = ch.group || "General";
+    group.textContent = ch.group || "Live TV";
     text.append(name, group);
 
     const now = document.createElement("span");
     now.className = "ch-now";
-    now.textContent = "NOW";
+    now.textContent = "LIVE";
 
     const star = document.createElement("button");
     star.type = "button";
@@ -1545,24 +1755,18 @@
   }
 
   function updateRailHead() {
-    let label = "More channels";
-    let context = "All channels";
+    let label = "More Live Channels";
+    let context = "All Channels";
 
     if (state.railTab === "fav") {
-      label = "Your favourites";
+      label = "Your Favourites";
       context = "Favourites";
     } else if (state.railTab === "recent") {
-      label = "Recently watched";
+      label = "Recently Watched";
       context = "Recent";
     } else if (state.group !== "all") {
       label = "More in " + state.group;
       context = state.group;
-    } else if (state.playlistFilter !== "all") {
-      const pl = state.playlists.find((p) => p.id === state.playlistFilter);
-      if (pl) {
-        label = "From " + pl.name;
-        context = pl.name;
-      }
     }
 
     els.railLabel.textContent = label;
@@ -1573,107 +1777,57 @@
 
   function renderRailEmpty(loading) {
     els.list.textContent = "";
-
     let block;
     if (loading) {
-      block = emptyBlock({
-        icon: ICONS.tv,
-        title: "Loading channels…",
-        text: "Fetching your playlists. Large lists can take a few seconds.",
-      });
+      block = emptyBlock({ icon: ICONS.tv, title: "Loading lineup…", text: "Fetching live channels." });
     } else if (state.railTab === "fav") {
-      block = emptyBlock({
-        icon: ICONS.star,
-        title: "No favourites yet",
-        text: "Tap the star on any channel to pin it here and at the top of the home page.",
-      });
+      block = emptyBlock({ icon: ICONS.star, title: "No favourites yet", text: "Tap ★ on any channel to pin it here." });
     } else if (state.railTab === "recent") {
-      block = emptyBlock({
-        icon: ICONS.clock,
-        title: "Nothing watched yet",
-        text: "Channels you play will show up here for quick access.",
-      });
+      block = emptyBlock({ icon: ICONS.clock, title: "Nothing watched yet", text: "Channels you watch appear here." });
     } else if (state.query) {
       block = emptyBlock({
         icon: ICONS.search,
         title: "No matches",
-        text: "Nothing found for “" + state.query + "”. Try another name or category.",
+        text: "Nothing found for “" + state.query + "”.",
         actions: [{ label: "Clear search", action: "clear-search" }],
-      });
-    } else if (state.group !== "all") {
-      block = emptyBlock({
-        icon: ICONS.tv,
-        title: "No channels in this category",
-        text: "Try another category or show all channels.",
-        actions: [{ label: "Show all channels", action: "clear-group" }],
-      });
-    } else if (!state.playlists.length) {
-      block = emptyBlock({
-        icon: ICONS.tv,
-        title: "Add your first playlist",
-        text: "Paste an M3U / M3U8 URL, upload a file, or load the demo.",
-        actions: [
-          { label: "Add playlist", action: "add", primary: true },
-          { label: "Load demo", action: "demo" },
-        ],
       });
     } else {
       block = emptyBlock({
         icon: ICONS.tv,
-        title: "No channels yet",
-        text: "Your playlists are empty or still loading. Try refreshing them.",
-        actions: [
-          { label: "Refresh channels", action: "refresh", primary: true },
-          { label: "Add playlist", action: "add" },
-        ],
+        title: "No channels here",
+        text: "Try refreshing the lineup or switching category.",
+        actions: [{ label: "Refresh", action: "refresh", primary: true }],
       });
     }
-
     els.list.appendChild(block);
     els.chanCount.textContent = "0 channels";
-    els.activeName.textContent = "No channels";
   }
 
   function renderHomeEmpty() {
     els.channelGrid.textContent = "";
     let block;
-
     if (state.query) {
       block = emptyBlock({
         icon: ICONS.search,
         title: "No channels match",
-        text: "Nothing found for “" + state.query + "”. Try a different name or category.",
+        text: "Nothing found for “" + state.query + "”.",
         actions: [{ label: "Clear search", action: "clear-search" }],
       });
     } else if (state.group !== "all") {
       block = emptyBlock({
         icon: ICONS.tv,
-        title: "This category is empty",
-        text: "No channels in “" + state.group + "” right now.",
-        actions: [{ label: "Show all channels", action: "clear-group" }],
-      });
-    } else if (!state.playlists.length) {
-      block = emptyBlock({
-        icon: ICONS.tv,
-        title: "Add your first playlist",
-        text: "Paste an M3U / M3U8 URL, upload a file, or start with the demo channels.",
-        actions: [
-          { label: "Add playlist", action: "add", primary: true },
-          { label: "Load demo", action: "demo" },
-        ],
+        title: "Empty category",
+        text: "No channels in “" + state.group + "”.",
+        actions: [{ label: "Show all", action: "clear-group" }],
       });
     } else {
       block = emptyBlock({
         icon: ICONS.tv,
-        title: "No channels loaded",
-        text: "The playlist may be empty or temporarily unreachable. Try refreshing.",
-        actions: [
-          { label: "Refresh channels", action: "refresh", primary: true },
-          { label: "Add playlist", action: "add" },
-        ],
+        title: "Could not load channel lineup",
+        text: "Check your internet connection or try refreshing.",
+        actions: [{ label: "Refresh lineup", action: "refresh", primary: true }],
       });
     }
-
     els.channelGrid.appendChild(block);
   }
 
@@ -1683,13 +1837,7 @@
     for (let i = 0; i < 12; i++) {
       const card = document.createElement("div");
       card.className = "card skeleton";
-      const logo = document.createElement("div");
-      logo.className = "sk-logo";
-      const line = document.createElement("div");
-      line.className = "sk-line";
-      const short = document.createElement("div");
-      short.className = "sk-line short";
-      card.append(logo, line, short);
+      card.innerHTML = '<div class="sk-logo"></div><div class="sk-line"></div><div class="sk-line short"></div>';
       frag.appendChild(card);
     }
     els.channelGrid.appendChild(frag);
@@ -1698,16 +1846,13 @@
   function emptyBlock({ icon, title, text, actions }) {
     const box = document.createElement("div");
     box.className = "empty";
-
     const art = document.createElement("div");
     art.className = "empty-art";
     art.innerHTML = icon || ICONS.tv;
-
     const h = document.createElement("h3");
     h.textContent = title;
     const p = document.createElement("p");
     p.textContent = text;
-
     box.append(art, h, p);
 
     if (actions && actions.length) {
@@ -1716,18 +1861,17 @@
       actions.forEach((a) => {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = a.primary ? "btn btn-primary" : "btn btn-ghost";
+        btn.className = a.primary ? "btn btn-primary" : "btn btn-glass";
         if (a.action) btn.dataset.action = a.action;
         btn.textContent = a.label;
         wrap.appendChild(btn);
       });
       box.appendChild(wrap);
     }
-
     return box;
   }
 
-  /* ============================== selects / filters ============================== */
+  /* ============================== selects / hero ============================== */
 
   function setPlaylistFilter(value) {
     state.playlistFilter = value || "all";
@@ -1743,13 +1887,17 @@
   }
 
   function renderPlaylistSelects() {
+    const showDropdown = state.playlists.length > 1;
+    if (els.playlistFilterWrap) els.playlistFilterWrap.hidden = !showDropdown;
+    if (els.railPlaylistWrap) els.railPlaylistWrap.hidden = !showDropdown;
+
     const total = state.channels.length;
     const build = (select) => {
       if (!select) return;
       select.textContent = "";
       const all = document.createElement("option");
       all.value = "all";
-      all.textContent = "All playlists (" + total.toLocaleString() + ")";
+      all.textContent = "All lineups (" + total.toLocaleString() + ")";
       select.appendChild(all);
       state.playlists.forEach((pl) => {
         const opt = document.createElement("option");
@@ -1759,7 +1907,6 @@
       });
       if (!state.playlists.some((p) => p.id === state.playlistFilter)) state.playlistFilter = "all";
       select.value = state.playlistFilter;
-      select.disabled = !state.playlists.length;
     };
     build(els.playlistFilter);
     build(els.playlistSelect);
@@ -1774,13 +1921,12 @@
       const g = c.group || "General";
       counts.set(g, (counts.get(g) || 0) + 1);
     });
-
     if (state.group !== "all" && !counts.has(state.group)) state.group = "all";
 
     els.groupFilter.textContent = "";
     const all = document.createElement("option");
     all.value = "all";
-    all.textContent = "All groups (" + base.length.toLocaleString() + ")";
+    all.textContent = "All categories (" + base.length.toLocaleString() + ")";
     els.groupFilter.appendChild(all);
 
     Array.from(counts.entries())
@@ -1804,25 +1950,14 @@
 
   function updateHero() {
     const groups = new Set(state.channels.map((c) => c.group || "General"));
-    const playlists = state.playlists.length;
-
     if (state.loading && !state.channels.length) {
-      els.heroStats.textContent = "Loading your channel library…";
+      els.heroStats.textContent = "Loading live channels…";
     } else if (!state.channels.length) {
-      els.heroStats.textContent = playlists
-        ? playlists + " playlist" + (playlists === 1 ? "" : "s") + " connected — waiting for channels."
-        : "No playlists yet — add one or load the demo.";
+      els.heroStats.textContent = "Connecting to lineup…";
     } else {
       els.heroStats.textContent =
-        state.channels.length.toLocaleString() +
-        " live channels · " +
-        groups.size +
-        " categories · " +
-        playlists +
-        " playlist" +
-        (playlists === 1 ? "" : "s");
+        state.channels.length.toLocaleString() + " Channels · " + groups.size + " Categories";
     }
-
     updateResume();
   }
 
@@ -1833,7 +1968,7 @@
       return;
     }
     els.resumeBtn.hidden = false;
-    els.resumeBtn.textContent = "▶ Resume " + target.name;
+    els.resumeBtn.textContent = "▶ Resume: " + target.name;
   }
 
   function updateBrowseCount() {
@@ -1845,11 +1980,11 @@
     }
     els.browseCount.textContent =
       shown === total
-        ? total.toLocaleString() + " channels"
-        : shown.toLocaleString() + " of " + total.toLocaleString();
+        ? "(" + total.toLocaleString() + ")"
+        : "(" + shown.toLocaleString() + " of " + total.toLocaleString() + ")";
   }
 
-  /* ============================== search ============================== */
+  /* ============================== search & clicks ============================== */
 
   function onSearchInput() {
     state.query = els.search.value.trim();
@@ -1858,7 +1993,6 @@
       if (state.view === "home") {
         renderCatBar();
         renderHomeGrid(true);
-        updateHero();
       } else {
         renderRail(true);
       }
@@ -1881,13 +2015,10 @@
     if (state.view === "home") {
       renderCatBar();
       renderHomeGrid(true);
-      updateHero();
     } else {
       renderRail(true);
     }
   }
-
-  /* ============================== delegated clicks ============================== */
 
   function onGridClick(e) {
     const fav = e.target.closest("[data-fav]");
@@ -1904,12 +2035,7 @@
       return;
     }
     const action = e.target.closest("[data-action]");
-    if (action) {
-      handleAction(action.dataset.action);
-      return;
-    }
-    const demo = e.target.closest("[data-demo]");
-    if (demo) loadDemo();
+    if (action) handleAction(action.dataset.action);
   }
 
   function onRailClick(e) {
@@ -1943,12 +2069,6 @@
 
   function handleAction(action) {
     switch (action) {
-      case "add":
-        openAddModal();
-        break;
-      case "demo":
-        loadDemo();
-        break;
       case "refresh":
         refreshAll({ force: true });
         break;
@@ -1962,9 +2082,6 @@
         renderHomeGrid(true);
         renderRail(true);
         break;
-      case "clear-playlist":
-        setPlaylistFilter("all");
-        break;
     }
   }
 
@@ -1976,19 +2093,7 @@
     return refreshAll({ force: true });
   }
 
-  /* ============================== fullscreen ============================== */
-
-  function isFullscreen() {
-    return !!(document.fullscreenElement || document.webkitFullscreenElement);
-  }
-
-  function onFullscreenChange() {
-    const full = isFullscreen();
-    els.screenTitle.hidden = !(full && state.current);
-    if (full && state.current) els.screenTitle.textContent = state.current.name;
-  }
-
-  /* ============================== add playlists ============================== */
+  /* ============================== custom playlists ============================== */
 
   function openAddModal() {
     setAddMode("url");
@@ -2008,27 +2113,21 @@
   async function addPlaylistFromUrl(rawUrl, name) {
     const url = normalizeUrl(rawUrl);
     if (!url) {
-      toast("That doesn’t look like a valid URL.", "err");
+      toast("Invalid URL.", "err");
       return false;
     }
-
     const existing = state.playlists.find((p) => p.url === url);
     if (existing) {
-      if (name && existing.name !== name) {
-        existing.name = name;
-        G.store.savePlaylists(state.playlists);
-      }
-      toast("That playlist is already added — refreshing it.", "warn");
+      toast("Playlist already added — refreshing.", "warn");
       closeModal(els.modalAdd);
       await refreshPlaylist(existing);
       return true;
     }
-
     setStatus("Loading playlist", "busy");
     try {
       const res = await G.net.fetchPlaylist(url, proxyOptions(false));
       const channels = G.m3u.parse(res.text);
-      if (!channels.length) throw new Error("No channels were found in this playlist.");
+      if (!channels.length) throw new Error("No channels found in playlist.");
       state.lastVia = res.via;
       const meta = await addPlaylistFromChannels(channels, name || nameFromUrl(url), "url", url);
       closeModal(els.modalAdd);
@@ -2036,8 +2135,8 @@
       setStatus("Ready");
       return true;
     } catch (err) {
-      setStatus("Could not load", "error");
-      toast(friendlyError(err), "err", 8000);
+      setStatus("Error", "error");
+      toast(friendlyError(err), "err", 7000);
       return false;
     }
   }
@@ -2045,7 +2144,7 @@
   async function addPlaylistFromChannels(channels, name, source, url) {
     const meta = {
       id: G.store.uid(),
-      name: name || "My playlist",
+      name: name || "Custom playlist",
       url: url || "",
       count: channels.length,
       addedAt: Date.now(),
@@ -2085,16 +2184,13 @@
 
   async function onFileSubmit(e) {
     e.preventDefault();
-    if (!state.pendingFile) {
-      toast("Choose an .m3u or .m3u8 file first.", "warn");
-      return;
-    }
+    if (!state.pendingFile) return toast("Choose an .m3u or .m3u8 file first.", "warn");
     const btn = els.formFile.querySelector('button[type="submit"]');
     setBtnBusy(btn, true);
     try {
       const text = await state.pendingFile.text();
       const channels = G.m3u.parse(text);
-      if (!channels.length) throw new Error("No channels were found in that file.");
+      if (!channels.length) throw new Error("No channels found in that file.");
       const name = state.pendingFile.name.replace(/\.[^.]+$/, "") || "Uploaded playlist";
       const meta = await addPlaylistFromChannels(channels, name, "file");
       closeModal(els.modalAdd);
@@ -2111,18 +2207,15 @@
   async function onTextSubmit(e) {
     e.preventDefault();
     const text = els.inText.value.trim();
-    if (!text) {
-      toast("Paste some M3U content first.", "warn");
-      return;
-    }
+    if (!text) return toast("Paste M3U content first.", "warn");
     const btn = els.formText.querySelector('button[type="submit"]');
     setBtnBusy(btn, true);
     try {
       const channels = G.m3u.parse(text);
-      if (!channels.length) throw new Error("No channels were found in the pasted content.");
+      if (!channels.length) throw new Error("No channels found.");
       const meta = await addPlaylistFromChannels(
         channels,
-        els.inTextName.value.trim() || "Pasted playlist",
+        els.inTextName.value.trim() || "Custom playlist",
         "text"
       );
       els.inText.value = "";
@@ -2136,53 +2229,20 @@
     }
   }
 
-  async function loadDemo() {
-    closeModal(els.modalAdd);
-    const existing = state.playlists.find((p) => p.source === "demo");
-    if (existing) {
-      setPlaylistFilter(existing.id);
-      if (state.view === "watch") showHome(true);
-      toast("Demo playlist is already added.", "ok");
-      return;
-    }
-
-    setStatus("Loading demo", "busy");
-    try {
-      const url = new URL("sample/demo.m3u", location.href).href;
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error("Demo playlist could not be fetched (HTTP " + res.status + ")");
-      const channels = G.m3u.parse(await res.text());
-      if (!channels.length) throw new Error("Demo playlist is empty.");
-      const meta = await addPlaylistFromChannels(channels, "Demo channels", "demo", url);
-      setPlaylistFilter(meta.id);
-      if (state.view === "watch") showHome(true);
-      setStatus("Ready");
-      toast("Demo channels loaded", "ok");
-    } catch (err) {
-      setStatus("Demo unavailable", "error");
-      toast(friendlyError(err) + " — try adding a playlist URL instead.", "err", 7000);
-    }
-  }
-
-  /* ============================== playlist management ============================== */
-
   async function refreshPlaylist(pl) {
-    if (!pl || !pl.url) {
-      toast("File and pasted playlists can’t be refreshed — remove and re-add them.", "warn");
-      return false;
-    }
-    setStatus("Refreshing " + pl.name, "busy");
+    if (!pl || !pl.url) return false;
+    setStatus("Refreshing…", "busy");
     try {
       await loadPlaylist(pl, { quiet: false });
       rebuildMerged();
       renderAll();
       renderManage();
       setStatus("Ready");
-      toast("Updated " + pl.name + " · " + (pl.count || 0).toLocaleString() + " channels", "ok");
+      toast("Updated " + pl.name, "ok");
       return true;
     } catch (err) {
       setStatus("Ready");
-      toast(pl.name + ": " + friendlyError(err), "err", 8000);
+      toast(pl.name + ": " + friendlyError(err), "err", 7000);
       return false;
     }
   }
@@ -2193,7 +2253,7 @@
     if (!state.playlists.length) {
       const p = document.createElement("p");
       p.className = "hint";
-      p.textContent = "No playlists yet.";
+      p.textContent = "No active lineups.";
       els.manageList.appendChild(p);
       return;
     }
@@ -2209,12 +2269,11 @@
       meta.textContent =
         (pl.count || 0).toLocaleString() +
         " channels · " +
-        (pl.url ? (pl.source === "default" ? "default" : "URL") : "local");
+        (pl.source === "default" ? "Official lineup" : "Custom");
       info.append(name, meta);
 
       const actions = document.createElement("div");
       actions.className = "manage-actions";
-
       if (pl.url) {
         const refresh = document.createElement("button");
         refresh.type = "button";
@@ -2223,13 +2282,14 @@
         refresh.addEventListener("click", () => refreshPlaylist(pl));
         actions.appendChild(refresh);
       }
-
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "mini-btn danger";
-      del.textContent = "Remove";
-      del.addEventListener("click", () => deletePlaylist(pl));
-      actions.appendChild(del);
+      if (pl.source !== "default" || CFG.ensureDefaults !== true) {
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "mini-btn danger";
+        del.textContent = "Remove";
+        del.addEventListener("click", () => deletePlaylist(pl));
+        actions.appendChild(del);
+      }
 
       row.append(info, actions);
       els.manageList.appendChild(row);
@@ -2237,35 +2297,19 @@
   }
 
   async function deletePlaylist(pl) {
-    if (!pl) return;
-    if (!confirm('Remove "' + pl.name + '" from this browser?')) return;
-
+    if (!pl || !confirm('Remove "' + pl.name + '"?')) return;
     state.playlists = state.playlists.filter((p) => p.id !== pl.id);
     state.cache.delete(pl.id);
     G.store.savePlaylists(state.playlists);
     await G.store.deleteCachedChannels(pl.id);
-
     if (state.playlistFilter === pl.id) state.playlistFilter = "all";
-    if (state.current && state.current.playlistId === pl.id) {
-      state.current = null;
-      state.playingUrl = "";
-      state.usingBackup = false;
-      player.stop();
-      updateNowPlaying(null);
-      showHome(false);
-    }
-
     rebuildMerged();
     renderAll();
     renderManage();
-    toast(
-      pl.source === "default" && CFG.ensureDefaults === true
-        ? "Playlist removed. Default playlists return on the next visit."
-        : "Playlist removed"
-    );
+    toast("Playlist removed");
   }
 
-  /* ============================== settings / theme ============================== */
+  /* ============================== settings / media controls ============================== */
 
   function openSettings() {
     els.setPlaylistProxy.value = state.settings.playlistProxy;
@@ -2284,7 +2328,7 @@
   }
 
   async function resetEverything() {
-    if (!confirm("Reset all local data? This removes playlists, favourites, backups, recents and settings.")) return;
+    if (!confirm("Reset local cache and reload Galib TV?")) return;
     G.store.reset();
     await G.store.clearChannelCache();
     try {
@@ -2298,7 +2342,7 @@
     const t = theme === "light" ? "light" : "dark";
     document.documentElement.dataset.theme = t;
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = t === "light" ? "#f3f7fb" : "#080b10";
+    if (meta) meta.content = t === "light" ? "#f4f7fb" : "#060911";
     G.store.setTheme(t);
     if (els.setDark) els.setDark.checked = t === "dark";
   }
@@ -2313,16 +2357,22 @@
 
   async function togglePip() {
     try {
-      if (document.pictureInPictureElement) {
-        await document.exitPictureInPicture();
-      } else if (document.pictureInPictureEnabled && state.current) {
-        await els.video.requestPictureInPicture();
-      } else {
-        toast("Picture-in-picture is not available here.", "warn");
-      }
+      if (document.pictureInPictureElement) await document.exitPictureInPicture();
+      else if (document.pictureInPictureEnabled && state.current) await els.video.requestPictureInPicture();
+      else toast("Picture-in-picture unavailable.", "warn");
     } catch {
       toast("Could not open picture-in-picture.", "warn");
     }
+  }
+
+  function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  }
+
+  function onFullscreenChange() {
+    const full = isFullscreen();
+    els.screenTitle.hidden = !(full && state.current);
+    if (full && state.current) els.screenTitle.textContent = state.current.name;
   }
 
   function toggleFullscreen() {
@@ -2338,15 +2388,9 @@
       video.webkitEnterFullscreen();
       return;
     }
-    if (wrap.requestFullscreen) {
-      wrap.requestFullscreen().catch(() => toast("Fullscreen was blocked by the browser.", "warn"));
-    } else if (wrap.webkitRequestFullscreen) {
-      wrap.webkitRequestFullscreen();
-    } else if (video.webkitEnterFullscreen) {
-      video.webkitEnterFullscreen();
-    } else {
-      toast("Fullscreen is not available here.", "warn");
-    }
+    if (wrap.requestFullscreen) wrap.requestFullscreen().catch(() => {});
+    else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
+    else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
   }
 
   async function copyStreamUrl() {
@@ -2354,23 +2398,13 @@
     const url = state.playingUrl || state.current.url;
     try {
       await navigator.clipboard.writeText(url);
-      toast("Stream link copied", "ok");
+      toast("Stream URL copied", "ok");
     } catch {
-      const input = document.createElement("textarea");
-      input.value = url;
-      document.body.appendChild(input);
-      input.select();
-      try {
-        document.execCommand("copy");
-        toast("Stream link copied", "ok");
-      } catch {
-        toast("Could not copy the link.", "err");
-      }
-      input.remove();
+      toast("Could not copy URL.", "err");
     }
   }
 
-  /* ============================== ui helpers ============================== */
+  /* ============================== helpers ============================== */
 
   function setStatus(text, kind) {
     if (!els.statusText || !els.statusPill) return;
@@ -2405,7 +2439,7 @@
       setTimeout(() => el.remove(), 200);
     };
     el.addEventListener("click", remove);
-    setTimeout(remove, ms || 4200);
+    setTimeout(remove, ms || 3800);
   }
 
   function setBtnBusy(btn, busy, label) {
@@ -2423,11 +2457,9 @@
   function friendlyError(err) {
     const msg = (err && err.message) || String(err || "Unknown error");
     if (/failed to fetch|networkerror|load failed|network error/i.test(msg)) {
-      return "Could not reach that URL. Check the link, or choose a proxy in Settings and try again.";
+      return "Could not reach URL. Try changing proxy in Settings.";
     }
-    if (/abort|timeout/i.test(msg)) {
-      return "The request timed out. The server may be slow — try again or use a proxy.";
-    }
+    if (/abort|timeout/i.test(msg)) return "Request timed out.";
     return msg;
   }
 
@@ -2448,34 +2480,13 @@
     try {
       const url = new URL(value);
       const last = decodeURIComponent(url.pathname.split("/").filter(Boolean).pop() || "");
-      const base = last
-        .replace(/\.(m3u8?|txt)$/i, "")
-        .replace(/[-_]+/g, " ")
-        .trim();
-      return base || url.hostname.replace(/^www\./, "");
+      return last.replace(/\.(m3u8?|txt)$/i, "").replace(/[-_]+/g, " ").trim() || url.hostname;
     } catch {
       return "Playlist";
     }
   }
 
-  function buildQuickPicks() {
-    if (!els.quickPicks) return;
-    els.quickPicks.textContent = "";
-    DEMOS.forEach((demo) => {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "chip";
-      chip.textContent = demo.label;
-      chip.addEventListener("click", async () => {
-        chip.disabled = true;
-        await addPlaylistFromUrl(demo.url, demo.name);
-        chip.disabled = false;
-      });
-      els.quickPicks.appendChild(chip);
-    });
-  }
-
-  /* ============================== PWA + updates ============================== */
+  /* ============================== PWA & auto-update ============================== */
 
   function setupPWA() {
     window.addEventListener("beforeinstallprompt", (e) => {
@@ -2486,13 +2497,11 @@
     window.addEventListener("appinstalled", () => {
       state.deferredInstall = null;
       els.installBtn.hidden = true;
-      toast("Galib TV installed on your device", "ok");
+      toast("Galib TV installed!", "ok");
     });
 
     const ua = navigator.userAgent || "";
-    const ios =
-      /iPad|iPhone|iPod/.test(ua) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     if (ios && !navigator.standalone) {
       els.installBtn.hidden = false;
       els.installBtn.dataset.ios = "1";
@@ -2516,7 +2525,7 @@
           });
           setTimeout(() => reg.update().catch(() => {}), 5000);
         })
-        .catch((err) => console.warn("[GalibTV] service worker registration failed", err));
+        .catch(() => {});
     };
 
     if (document.readyState === "complete") start();
@@ -2524,28 +2533,25 @@
   }
 
   async function installApp() {
-    const ios = els.installBtn.dataset.ios === "1" || /iPhone|iPad|iPod/.test(navigator.userAgent);
-    if (ios) {
-      toast("iPhone/iPad: tap Share → Add to Home Screen.", "ok", 7000);
+    if (els.installBtn.dataset.ios === "1") {
+      toast("iPhone/iPad: tap Share → Add to Home Screen.", "ok", 6500);
       return;
     }
     if (!state.deferredInstall) {
-      toast("Open your browser menu → Install app / Add to Home screen.", "ok", 6000);
+      toast("Use browser menu → Install App.", "ok", 5000);
       return;
     }
     state.deferredInstall.prompt();
-    try {
-      await state.deferredInstall.userChoice;
-    } catch {}
+    try { await state.deferredInstall.userChoice; } catch {}
     state.deferredInstall = null;
     els.installBtn.hidden = true;
   }
 
   function setVersionLabel() {
-    if (els.versionLabel) {
-      els.versionLabel.textContent = "v" + APP_VERSION + (BUILD_DATE ? " · " + BUILD_DATE : "");
-    }
+    const label = "v" + APP_VERSION + (BUILD_DATE ? " · " + BUILD_DATE : "");
+    if (els.versionLabel) els.versionLabel.textContent = label;
     if (els.appVersion) els.appVersion.textContent = "Galib TV v" + APP_VERSION;
+    if (els.footerVersion) els.footerVersion.textContent = "v" + APP_VERSION;
   }
 
   function startUpdateChecks() {
@@ -2559,9 +2565,7 @@
       if (document.hidden) return;
       const now = Date.now();
       if (now - state.lastUpdateCheck > 120000) checkForUpdate(false);
-      if (now - state.lastRefreshAt > autoRefreshMs()) {
-        refreshAll({ background: true, silent: true });
-      }
+      if (now - state.lastRefreshAt > autoRefreshMs()) refreshAll({ background: true, silent: true });
     });
   }
 
@@ -2569,7 +2573,7 @@
     const url = new URL(VERSION_FILE, location.href);
     url.searchParams.set("t", String(Date.now()));
     const res = await fetch(url.href, { cache: "no-store", credentials: "omit" });
-    if (!res.ok) throw new Error("Version check failed with HTTP " + res.status);
+    if (!res.ok) throw new Error("HTTP " + res.status);
     const text = await res.text();
     const match = /GTV_APP_VERSION\s*=\s*["']([^"']+)["']/.exec(text);
     return match ? match[1].trim() : null;
@@ -2593,17 +2597,14 @@
       if (manual) {
         const ok = await refreshAll({ force: true, silent: true });
         toast(
-          ok
-            ? "You’re on the latest version · channel lists refreshed."
-            : "You’re on the latest version, but the channel refresh failed.",
+          ok ? "Latest version · Live channels refreshed." : "Latest version · Refresh failed.",
           ok ? "ok" : "warn",
-          5000
+          4500
         );
       }
       return false;
-    } catch (err) {
-      console.warn("[GalibTV] update check failed", err);
-      if (manual) toast("Could not check for updates. Check your connection.", "warn");
+    } catch {
+      if (manual) toast("Could not check for updates.", "warn");
       return false;
     } finally {
       state.updateChecking = false;
@@ -2617,20 +2618,16 @@
 
     const guardKey = "gtv.reload." + remoteVersion;
     let last = 0;
-    try {
-      last = Number(sessionStorage.getItem(guardKey) || 0);
-    } catch {}
+    try { last = Number(sessionStorage.getItem(guardKey) || 0); } catch {}
     if (last && Date.now() - last < 30000) {
       state.hardReloading = false;
-      toast("Update found but this page is still cached. Close and reopen the app.", "warn", 9000);
+      toast("Update found — please close and reopen the app.", "warn", 8000);
       return;
     }
-    try {
-      sessionStorage.setItem(guardKey, String(Date.now()));
-    } catch {}
+    try { sessionStorage.setItem(guardKey, String(Date.now())); } catch {}
 
     setStatus("Updating…", "busy");
-    toast("New version " + remoteVersion + " found — reloading…", "ok", 3000);
+    toast("Updating Galib TV to v" + remoteVersion + "…", "ok", 3000);
 
     try {
       const keys = await caches.keys();
@@ -2641,7 +2638,7 @@
       await Promise.all(regs.map((reg) => reg.unregister()));
     } catch {}
 
-    await new Promise((resolve) => setTimeout(resolve, 450));
+    await new Promise((resolve) => setTimeout(resolve, 400));
 
     const url = new URL(location.href);
     url.searchParams.set("v", remoteVersion);
@@ -2653,34 +2650,18 @@
 
   function onKeyDown(e) {
     const tag = (e.target && e.target.tagName ? e.target.tagName : "").toLowerCase();
-    const typing =
-      tag === "input" ||
-      tag === "textarea" ||
-      tag === "select" ||
-      (e.target && e.target.isContentEditable);
+    const typing = tag === "input" || tag === "textarea" || tag === "select" || (e.target && e.target.isContentEditable);
 
     if (e.key === "Escape") {
-      if ($(".modal:not([hidden])")) {
-        closeAllModals();
-        return;
-      }
+      if ($(".modal:not([hidden])")) return closeAllModals();
       if (isFullscreen()) return;
-      if (state.query) {
-        clearSearch();
-        return;
-      }
-      if (typing) {
-        e.target.blur();
-        return;
-      }
-      if (state.view === "watch") {
-        showHome(true);
-      }
+      if (state.query) return clearSearch();
+      if (typing) return e.target.blur();
+      if (state.view === "watch") showHome(true);
       return;
     }
 
-    if (typing) return;
-    if ($(".modal:not([hidden])")) return;
+    if (typing || $(".modal:not([hidden])")) return;
 
     if (e.key === "/") {
       e.preventDefault();
@@ -2690,19 +2671,10 @@
     }
 
     const key = e.key.toLowerCase();
-    if (key === "f") {
-      e.preventDefault();
-      toggleFullscreen();
-    } else if (key === "m") {
-      e.preventDefault();
-      toggleMute();
-    } else if (key === "p") {
-      e.preventDefault();
-      togglePip();
-    }
+    if (key === "f") { e.preventDefault(); toggleFullscreen(); }
+    else if (key === "m") { e.preventDefault(); toggleMute(); }
+    else if (key === "p") { e.preventDefault(); togglePip(); }
   }
-
-  /* ============================== expose ============================== */
 
   global.GalibTV = {
     state,

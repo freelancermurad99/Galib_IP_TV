@@ -47,9 +47,29 @@ window.GTV_CONFIG = {
     ---------------------------------------------------------------- */
   ],
 
+  /* ৩. অ্যাডমিন ব্যাকআপ স্ট্রিম লিংক (Multiple Backup Links per Channel)
+     কোনো চ্যানেলের মেইন লিংক কাজ না করলে ব্রাউজার এগুলো একের পর এক ট্রাই করবে।
+     চ্যানেলের নাম অথবা মেইন URL কী হিসেবে দিয়ে অ্যারে আকারে ব্যাকআপ লিংক দিন:
+     "Somoy TV": ["https://...", "https://..."]
+  */
+  channelBackups: {},
+
+  /* ৪. অ্যাডমিন ব্র্যান্ডিং */
+  brand: {
+    name: "Galib TV",
+    tagline: "LIVE OTT · বাংলা ও আন্তর্জাতিক টিভি",
+    subtitle: "নির্বাচিত লাইভ টিভি চ্যানেল — দ্রুত, পরিচ্ছন্ন এবং মোবাইল-ফ্রেন্ডলি অভিজ্ঞতায়।",
+  },
+
   /* Re-add missing defaults on every visit (set false to allow deleting them) */
   ensureDefaults: true,
 
+  /* Remove old default playlists if admin removes/disables them in this file */
+  syncRemovedDefaults: true,
+
   /* Refresh playlist URLs in the background (minutes) */
-  autoRefreshMinutes: 20,
+  autoRefreshMinutes: 15,
+
+  /* Allow users to add custom playlists from Settings */
+  allowUserPlaylists: true,
 };

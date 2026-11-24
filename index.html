@@ -21,154 +21,146 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script>
-    /* Versioned asset URLs after an in-app update (?v=...) bypass HTTP cache. */
-    window.GTV_ASSET_VERSION = new URLSearchParams(location.search).get("v") || "";
-    document.write(
-      '<link rel="stylesheet" href="assets/css/style.css' +
-        (window.GTV_ASSET_VERSION ? "?v=" + encodeURIComponent(window.GTV_ASSET_VERSION) : "") +
-        '">'
-    );
-  </script>
+  <link rel="stylesheet" href="assets/css/style.css?v=3.0.0" />
 </head>
 <body>
-  <div class="aurora" aria-hidden="true"></div>
+  <div class="ambient" aria-hidden="true"></div>
 
   <header class="topbar">
-    <button class="icon-btn back-btn" id="btn-back" type="button" title="Back to home" aria-label="Back to home" hidden>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
-
-    <a class="brand" href="./" id="brand" aria-label="Galib TV home">
-      <img class="brand-logo" src="assets/brand-mark.png" width="38" height="38" alt="Galib IPTV logo" />
-      <span class="brand-name">Galib<span>TV</span></span>
-    </a>
+    <div class="topbar-left">
+      <button class="icon-btn back-btn" id="btn-back" type="button" title="Back to home" aria-label="Back to home" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <a class="brand" href="./" id="brand" aria-label="Galib TV home">
+        <span class="brand-logo-wrap">
+          <img class="brand-logo" src="assets/logo.webp" width="40" height="40" alt="Galib IPTV logo" />
+        </span>
+        <span class="brand-text">
+          <span class="brand-name">Galib<span>TV</span></span>
+          <span class="brand-tag"><i></i>LIVE OTT</span>
+        </span>
+      </a>
+    </div>
 
     <div class="search" role="search">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 0 1 5.9 12.1l4.3 4.3-1.4 1.4-4.3-4.3A7.5 7.5 0 1 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z" fill="currentColor"/></svg>
-      <input id="search" type="search" placeholder="Search channels, groups…" autocomplete="off" spellcheck="false" aria-label="Search channels" />
+      <input id="search" type="search" placeholder="Search live channels, categories…" autocomplete="off" spellcheck="false" aria-label="Search channels" />
       <kbd>/</kbd>
     </div>
 
     <div class="top-actions">
       <span class="status-pill" id="status-pill"><i></i><span id="status-text">Ready</span></span>
-      <button class="icon-btn" id="btn-refresh-app" type="button" title="Check for updates / refresh" aria-label="Check for updates and refresh">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <button class="icon-btn" id="btn-refresh-app" type="button" title="Check updates & refresh channels" aria-label="Check updates and refresh">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
-      <button class="icon-btn install-btn" id="btn-install" type="button" title="Install app" aria-label="Install app" hidden>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <button class="btn btn-primary" id="btn-add" type="button" aria-label="Add playlist">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z" fill="currentColor"/></svg>
-        <span>Add playlist</span>
+      <button class="icon-btn install-btn" id="btn-install" type="button" title="Install Galib TV app" aria-label="Install app" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <button class="icon-btn" id="btn-theme" type="button" title="Toggle theme" aria-label="Toggle theme">
         <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.4A8.5 8.5 0 0 1 9.6 3.5a8.5 8.5 0 1 0 10.9 10.9Z" fill="currentColor"/></svg>
         <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-13v2m0 12v2M4 12H2m20 0h-2M5.6 5.6 4.2 4.2m15.6 15.6-1.4-1.4M5.6 18.4l-1.4 1.4M19.8 4.2l-1.4 1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
       </button>
-      <button class="icon-btn" id="btn-settings" type="button" title="Settings" aria-label="Settings">
+      <button class="icon-btn" id="btn-settings" type="button" title="Settings & Menu" aria-label="Settings">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm8.4 3.5c0 .5 0 1-.1 1.4l2 1.6-2 3.4-2.4-.9a7.6 7.6 0 0 1-2.4 1.4l-.4 2.5h-4l-.4-2.5a7.6 7.6 0 0 1-2.4-1.4l-2.4.9-2-3.4 2-1.6A8.6 8.6 0 0 1 3.6 12c0-.5 0-1 .1-1.4l-2-1.6 2-3.4 2.4.9A7.6 7.6 0 0 1 8.5 5.1L8.9 2.6h4l.4 2.5c.9.3 1.7.8 2.4 1.4l2.4-.9 2 3.4-2 1.6c.1.4.1.9.1 1.4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       </button>
     </div>
   </header>
 
-  <!-- ═══════════════════════════ HOME VIEW ═══════════════════════════ -->
   <main class="home" id="home-view">
-    <section class="hero">
-      <div class="hero-copy">
-        <span class="eyebrow"><i></i> Live TV · Your playlists</span>
-        <h1>Your channels,<br /><span class="grad-text">beautifully simple.</span></h1>
-        <p class="hero-stats" id="hero-stats">Loading your library…</p>
-        <div class="hero-actions">
-          <button class="btn btn-primary" type="button" data-open-add>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z" fill="currentColor"/></svg>
-            Add playlist
+    <section class="spotlight" id="spotlight">
+      <div class="spotlight-media">
+        <div class="spotlight-logo-box">
+          <img src="assets/logo.webp" alt="Galib IPTV" width="240" height="240" decoding="async" />
+        </div>
+      </div>
+      <div class="spotlight-body">
+        <div class="spotlight-badges">
+          <span class="pill-live"><i></i>LIVE NOW</span>
+          <span class="pill-meta" id="hero-stats">Loading live lineup…</span>
+        </div>
+        <h1 id="hero-title">Galib TV <span class="grad-text">Live</span></h1>
+        <p class="spotlight-sub" id="hero-sub">Watch curated live TV channels — instant playback with automatic backup servers.</p>
+        <div class="spotlight-actions">
+          <button class="btn btn-primary" type="button" id="btn-watch-first">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5c0-.8.9-1.3 1.6-.9l8 6.5c.6.5.6 1.3 0 1.8l-8 6.5c-.7.4-1.6 0-1.6-.9v-13Z" fill="currentColor"/></svg>
+            <span>Watch Live</span>
           </button>
-          <button class="btn btn-ghost" type="button" id="btn-resume" hidden>▶ Resume</button>
-          <button class="btn btn-ghost" type="button" id="btn-home-demo">Load demo</button>
-        </div>
-      </div>
-      <div class="hero-art" aria-hidden="true">
-        <div class="orb orb-a"></div>
-        <div class="orb orb-b"></div>
-        <div class="hero-logo-card">
-          <img src="assets/logo.webp" alt="Galib IPTV" width="512" height="512" decoding="async" />
+          <button class="btn btn-glass" type="button" id="btn-resume" hidden>▶ Continue Watching</button>
         </div>
       </div>
     </section>
 
-    <section class="fav-section" id="fav-section" hidden>
+    <section class="rail-section" id="fav-section" hidden>
       <div class="section-head">
-        <h2>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.8l5.9-.9L12 3.6Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
-          Your favourites
-        </h2>
-        <span class="muted" id="fav-count"></span>
+        <h2><span class="sec-icon star">★</span> Favourites <span class="muted" id="fav-count"></span></h2>
       </div>
-      <div class="fav-row" id="fav-row"></div>
+      <div class="h-rail" id="fav-row"></div>
     </section>
 
-    <section class="browse">
+    <section class="rail-section" id="recent-section" hidden>
       <div class="section-head">
-        <h2>Channels <span class="muted" id="browse-count"></span></h2>
+        <h2><span class="sec-icon live">▶</span> Recently Watched <span class="muted" id="recent-count"></span></h2>
+      </div>
+      <div class="h-rail" id="recent-row"></div>
+    </section>
+
+    <section class="browse" id="browse-section">
+      <div class="section-head">
+        <h2>Live Channels <span class="muted" id="browse-count"></span></h2>
         <div class="browse-tools">
-          <div class="select-wrap">
-            <select id="playlist-filter" aria-label="Filter by playlist"><option value="all">All playlists</option></select>
+          <div class="select-wrap" id="playlist-filter-wrap" hidden>
+            <select id="playlist-filter" aria-label="Filter by lineup"><option value="all">All lineups</option></select>
           </div>
-          <button class="icon-btn sm" id="btn-refresh-all" type="button" title="Refresh all playlists" aria-label="Refresh all playlists">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <button class="icon-btn sm" id="btn-refresh-all" type="button" title="Refresh channel lineup" aria-label="Refresh channels">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>
       </div>
 
       <div class="cat-bar" id="cat-bar" role="tablist" aria-label="Channel categories"></div>
-
       <div class="channel-grid" id="channel-grid"></div>
-      <div class="grid-more" id="grid-more" hidden><button class="btn btn-ghost" type="button" id="btn-grid-more">Load more channels</button></div>
+      <div class="grid-more" id="grid-more" hidden>
+        <button class="btn btn-glass" type="button" id="btn-grid-more">Load more</button>
+        <button class="btn btn-primary" type="button" id="btn-grid-all">Show all channels</button>
+      </div>
     </section>
 
     <footer class="footer">
-      <span class="footer-brand"><img src="assets/brand-mark.png" width="22" height="22" alt="" /> Galib TV</span>
-      <span>Built for the open web · <a href="https://github.com/iptv-org/iptv" target="_blank" rel="noopener">iptv-org</a> · <a href="https://github.com/video-dev/hls.js/" target="_blank" rel="noopener">hls.js</a></span>
-      <span>This player hosts no channels. Only play streams you have the right to watch.</span>
+      <span class="footer-brand">
+        <img src="assets/logo.webp" width="26" height="26" alt="Galib TV" />
+        <span>Galib TV</span>
+      </span>
+      <span class="footer-note">Live OTT Streaming · Auto-updating PWA</span>
+      <span class="footer-ver" id="footer-version"></span>
     </footer>
   </main>
 
-  <!-- ═══════════════════════════ WATCH VIEW ═══════════════════════════ -->
   <div class="watch" id="watch-view" hidden>
     <main class="layout">
       <section class="stage">
         <div class="player-card">
           <div class="video-wrap" id="video-wrap">
             <video id="video" playsinline controls preload="none"></video>
-
             <div class="player-idle" id="player-idle">
-              <div class="idle-art">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 21h8M12 17.5V21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 8.4c0-.6.7-1 1.2-.7l3.9 2.5c.5.3.5 1 0 1.3l-3.9 2.5c-.5.3-1.2-.1-1.2-.7V8.4Z" fill="currentColor"/></svg>
-              </div>
-              <h2>Nothing playing</h2>
-              <p>Pick a channel from the list, or go back home to browse.</p>
-              <div class="idle-actions">
-                <button class="btn btn-ghost" type="button" id="btn-idle-home">Browse channels</button>
-              </div>
+              <div class="idle-logo"><img src="assets/logo.webp" alt="Galib IPTV" width="96" height="96" /></div>
+              <h2>Select a channel to watch</h2>
+              <p>Pick any live channel from the list to start streaming.</p>
+              <div class="idle-actions"><button class="btn btn-primary" type="button" id="btn-idle-home">Browse Live TV</button></div>
             </div>
-
             <div class="player-spinner" id="player-spinner" hidden>
               <span class="ring"></span>
-              <span class="spinner-text">Connecting to stream…</span>
+              <span class="spinner-text">Connecting to live stream…</span>
             </div>
-
             <div class="player-error" id="player-error" hidden>
               <span class="err-icon">!</span>
-              <h3 id="error-title">Stream failed to load</h3>
-              <p id="error-text">The channel may be offline, geo-blocked, or missing CORS headers.</p>
+              <h3 id="error-title">Stream currently unavailable</h3>
+              <p id="error-text">The stream may be offline or blocked by your network.</p>
               <div class="err-actions">
-                <button class="btn btn-ghost" type="button" id="btn-error-retry">Try again</button>
-                <button class="btn btn-ghost" type="button" id="btn-error-proxy">Try via proxy</button>
-                <button class="btn btn-ghost" type="button" id="btn-error-backup">Backup link</button>
+                <button class="btn btn-primary" type="button" id="btn-error-retry">Retry</button>
+                <button class="btn btn-glass" type="button" id="btn-error-proxy">Try via proxy</button>
+                <button class="btn btn-glass" type="button" id="btn-error-backup">Add backup link</button>
               </div>
             </div>
-
             <div class="badges">
               <span class="badge badge-live" id="live-badge" hidden><i></i>LIVE</span>
               <span class="badge" id="quality-badge" hidden>HD</span>
@@ -187,7 +179,7 @@
             </div>
             <div class="player-actions">
               <button class="icon-btn" id="btn-fav" type="button" title="Add to favourites" aria-label="Add to favourites">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.8l5.9-.9L12 3.6Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.8l5.9-.9L12 3.6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
               </button>
               <button class="icon-btn" id="btn-mute" type="button" title="Mute / unmute" aria-label="Mute or unmute">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3L12 5.6v12.8L7 14.5H4v-5Z" fill="currentColor"/><path d="M15 8.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
@@ -204,27 +196,35 @@
             </div>
           </div>
 
-          <div class="stream-meta" id="stream-meta" hidden>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 1 0-5-5l-1 1M14 11a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 1 0 5 5l1-1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-            <code id="stream-url"></code>
-            <button class="mini-btn" type="button" id="btn-backup">Backup</button>
-            <button class="mini-btn" type="button" id="btn-copy">Copy</button>
+          <div class="source-bar" id="source-bar" hidden>
+            <span class="source-label">Servers</span>
+            <div class="source-pills" id="source-pills"></div>
+            <div class="source-right">
+              <button class="mini-btn" type="button" id="btn-backup">+ Backup</button>
+              <button class="mini-btn" type="button" id="btn-copy">Copy URL</button>
+            </div>
           </div>
         </div>
 
         <div class="hint-row">
-          <span><kbd>F</kbd> fullscreen</span>
-          <span><kbd>M</kbd> mute</span>
-          <span><kbd>P</kbd> PiP</span>
-          <span><kbd>/</kbd> search</span>
-          <button class="hint-home" type="button" id="btn-hint-home">← All channels</button>
-          <span class="hint-note" id="hint-note">Streams play directly from their source — nothing is stored on our side.</span>
+          <button class="hint-home" type="button" id="btn-hint-home">← All Live Channels</button>
+          <div class="hint-keys">
+            <span><kbd>F</kbd> Fullscreen</span>
+            <span><kbd>M</kbd> Mute</span>
+            <span><kbd>P</kbd> PiP</span>
+            <span><kbd>/</kbd> Search</span>
+          </div>
         </div>
       </section>
 
       <aside class="rail" id="rail">
         <div class="rail-head">
-          <div class="rail-label" id="rail-label">More channels</div>
+          <div class="rail-title-row">
+            <div class="rail-label" id="rail-label">More channels</div>
+            <button class="icon-btn sm" id="btn-reload-playlist" type="button" title="Refresh channels" aria-label="Refresh channels">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
           <div class="rail-tabs" role="tablist" aria-label="Channel filters">
             <button class="is-active" data-tab="all" role="tab" aria-selected="true">Category</button>
             <button data-tab="fav" role="tab" aria-selected="false">Favourites</button>
@@ -232,26 +232,41 @@
           </div>
           <div class="rail-tools">
             <div class="select-wrap">
-              <select id="group-filter" aria-label="Filter by group"><option value="all">All groups</option></select>
+              <select id="group-filter" aria-label="Filter by category"><option value="all">All categories</option></select>
             </div>
-            <div class="select-wrap">
-              <select id="playlist-select" aria-label="Active playlist"></select>
+            <div class="select-wrap" id="rail-playlist-wrap" hidden>
+              <select id="playlist-select" aria-label="Filter by lineup"></select>
             </div>
-            <button class="icon-btn sm" id="btn-reload-playlist" type="button" title="Reload playlist" aria-label="Reload playlist">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
           </div>
         </div>
-
         <div class="channel-list" id="channel-list" aria-live="polite"></div>
         <div class="list-more" id="list-more" hidden><button type="button" id="btn-more">Load more channels</button></div>
         <div class="rail-foot">
           <span id="chan-count">0 channels</span>
-          <span id="active-name" class="dot">No playlist loaded</span>
+          <span id="active-name" class="dot">Live</span>
         </div>
       </aside>
     </main>
   </div>
+
+  <nav class="bottom-nav" id="bottom-nav" aria-label="Mobile navigation">
+    <button type="button" class="bnav-btn is-active" data-bnav="home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      <span>Home</span>
+    </button>
+    <button type="button" class="bnav-btn" data-bnav="fav">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 9.8l5.9-.9L12 3.6Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      <span>Favourites</span>
+    </button>
+    <button type="button" class="bnav-btn" data-bnav="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 0 1 5.9 12.1l4.3 4.3-1.4 1.4-4.3-4.3A7.5 7.5 0 1 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z" fill="currentColor"/></svg>
+      <span>Search</span>
+    </button>
+    <button type="button" class="bnav-btn" data-bnav="settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+      <span>Menu</span>
+    </button>
+  </nav>
 
   <!-- ───────────────────────── Add playlist modal ───────────────────────── -->
   <div class="modal" id="modal-add" hidden>
@@ -317,75 +332,82 @@
   <div class="modal" id="modal-settings" hidden>
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
       <header class="modal-head">
-        <div>
-          <h3 id="settings-title">Settings</h3>
-          <p>Stored locally in this browser · <span id="version-label"></span></p>
+        <div class="modal-brand-head">
+          <img src="assets/logo.webp" width="36" height="36" alt="Galib TV" />
+          <div>
+            <h3 id="settings-title">Menu &amp; Settings</h3>
+            <p><span id="version-label"></span></p>
+          </div>
         </div>
         <button class="icon-btn" type="button" data-close aria-label="Close">✕</button>
       </header>
 
       <div class="settings">
-        <label class="field">
-          <span>Playlist fetching</span>
-          <select id="set-playlist-proxy">
-            <option value="auto">Auto — direct, then CORS proxies</option>
-            <option value="none">Direct only (fastest, may fail)</option>
-            <option value="allorigins">AllOrigins proxy</option>
-            <option value="codetabs">CodeTabs proxy</option>
-            <option value="corsproxy">corsproxy.io</option>
-            <option value="custom">Custom proxy</option>
-          </select>
-        </label>
-        <label class="field" id="custom-proxy-field" hidden>
-          <span>Custom proxy prefix <em>URL is appended encoded</em></span>
-          <input id="set-custom-proxy" type="url" placeholder="https://my-proxy.example.com/?url=" />
-        </label>
-        <label class="field">
-          <span>Stream playback</span>
-          <select id="set-stream-proxy">
-            <option value="auto">Auto — direct, fallback to proxy</option>
-            <option value="always">Always use proxy</option>
-            <option value="never">Never use proxy</option>
-          </select>
-        </label>
-        <label class="switch">
-          <input type="checkbox" id="set-autoplay" checked />
-          <span>Autoplay when a channel is selected</span>
-        </label>
-        <label class="switch">
-          <input type="checkbox" id="set-lowlatency" checked />
-          <span>Low-latency mode for live streams</span>
-        </label>
-        <label class="switch">
-          <input type="checkbox" id="set-dark" checked />
-          <span>Dark theme</span>
-        </label>
-
-        <div class="manage">
+        <div class="manage first-manage">
           <p class="manage-title">App updates</p>
           <div class="manage-item">
             <div class="manage-info">
               <strong id="app-version">Galib TV</strong>
-              <span>New versions reload automatically</span>
+              <span>Checks for new channel lineups &amp; app versions</span>
             </div>
-            <button class="mini-btn" type="button" id="btn-check-update">Check now</button>
+            <button class="mini-btn accent" type="button" id="btn-check-update">Check now</button>
           </div>
         </div>
 
-        <div class="manage">
-          <p class="manage-title">Your playlists</p>
+        <div class="manage" id="playlists-manage-section">
+          <div class="manage-head-row">
+            <p class="manage-title">Active lineups &amp; playlists</p>
+            <button class="mini-btn accent" type="button" id="btn-add">+ Add custom</button>
+          </div>
           <div class="manage-list" id="playlist-manage"></div>
+        </div>
+
+        <div class="manage">
+          <p class="manage-title">Playback &amp; network</p>
+          <label class="field">
+            <span>Playlist fetching</span>
+            <select id="set-playlist-proxy">
+              <option value="auto">Auto — direct, then CORS proxies</option>
+              <option value="none">Direct only (fastest for BDIX)</option>
+              <option value="allorigins">AllOrigins proxy</option>
+              <option value="codetabs">CodeTabs proxy</option>
+              <option value="corsproxy">corsproxy.io</option>
+              <option value="custom">Custom proxy</option>
+            </select>
+          </label>
+          <label class="field" id="custom-proxy-field" hidden>
+            <span>Custom proxy prefix <em>URL is appended encoded</em></span>
+            <input id="set-custom-proxy" type="url" placeholder="Custom proxy URL prefix" />
+          </label>
+          <label class="field">
+            <span>Stream playback</span>
+            <select id="set-stream-proxy">
+              <option value="auto">Auto — direct, fallback to proxy</option>
+              <option value="always">Always use proxy</option>
+              <option value="never">Never use proxy (recommended for BDIX)</option>
+            </select>
+          </label>
+          <label class="switch">
+            <input type="checkbox" id="set-autoplay" checked />
+            <span>Autoplay when a channel is selected</span>
+          </label>
+          <label class="switch">
+            <input type="checkbox" id="set-lowlatency" checked />
+            <span>Low-latency mode for live streams</span>
+          </label>
+          <label class="switch">
+            <input type="checkbox" id="set-dark" checked />
+            <span>Dark theme</span>
+          </label>
         </div>
 
         <div class="danger-zone">
           <div>
-            <strong>Reset local data</strong>
-            <p>Removes playlists, favourites, recent channels and settings.</p>
+            <strong>Reset local cache</strong>
+            <p>Clears saved favourites, recents, backups and refreshes the default lineup.</p>
           </div>
           <button class="btn btn-danger" type="button" id="btn-reset">Reset</button>
         </div>
-
-        <p class="about">Galib TV is a static, client-side IPTV player. No accounts, no analytics, no backend. Playback uses <a href="https://github.com/video-dev/hls.js/" target="_blank" rel="noopener">hls.js</a> and <a href="https://github.com/xqq/mpegts.js" target="_blank" rel="noopener">mpegts.js</a>. Demo playlists come from <a href="https://github.com/iptv-org/iptv" target="_blank" rel="noopener">iptv-org</a>.</p>
       </div>
     </div>
   </div>
@@ -423,24 +445,12 @@
   <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mpegts.js@1/dist/mpegts.js"></script>
-  <script>
-    /* Load local scripts in order, with the update version appended. */
-    (function () {
-      var v = window.GTV_ASSET_VERSION || "";
-      var q = v ? "?v=" + encodeURIComponent(v) : "";
-      var files = [
-        "assets/js/m3u.js",
-        "assets/js/store.js",
-        "assets/js/net.js",
-        "assets/js/player.js",
-        "assets/js/version.js",
-        "assets/js/config.js",
-        "assets/js/app.js",
-      ];
-      for (var i = 0; i < files.length; i++) {
-        document.write('<script src="' + files[i] + q + '"><\/script>');
-      }
-    })();
-  </script>
+  <script src="assets/js/m3u.js?v=3.0.0"></script>
+  <script src="assets/js/store.js?v=3.0.0"></script>
+  <script src="assets/js/net.js?v=3.0.0"></script>
+  <script src="assets/js/player.js?v=3.0.0"></script>
+  <script src="assets/js/version.js?v=3.0.0"></script>
+  <script src="assets/js/config.js?v=3.0.0"></script>
+  <script src="assets/js/app.js?v=3.0.0"></script>
 </body>
 </html>
