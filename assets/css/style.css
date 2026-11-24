@@ -1258,6 +1258,35 @@ select:focus {
   border-radius: 0;
 }
 
+.video-wrap.is-rotated {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 100dvh;
+  height: 100dvw;
+  aspect-ratio: auto;
+  transform: translate(-50%, -50%) rotate(90deg);
+  z-index: 220;
+  border-radius: 0;
+  background: #000000;
+}
+
+.rotate-exit {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  padding: 7px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(6, 9, 17, 0.72);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
 .player-idle {
   position: absolute;
   inset: 0;

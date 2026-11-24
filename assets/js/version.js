@@ -10,5 +10,5 @@
    বাটন দিয়েও manually check করা যাবে।
    ========================================================= */
 
-window.GTV_APP_VERSION = "3.2.0";
+window.GTV_APP_VERSION = "3.3.0";
 window.GTV_BUILD_DATE = "2026-11-24";

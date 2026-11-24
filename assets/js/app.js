@@ -90,6 +90,8 @@
     favBtn: $("#btn-fav"),
     muteBtn: $("#btn-mute"),
     pipBtn: $("#btn-pip"),
+    rotateBtn: $("#btn-rotate"),
+    rotateExitBtn: $("#btn-rotate-exit"),
     fullBtn: $("#btn-full"),
     retryBtn: $("#btn-retry"),
     sourceBar: $("#source-bar"),
@@ -168,6 +170,8 @@
     fallbackBusy: false,
     lastVia: "",
     blockedToastShown: false,
+    rotated: false,
+    orientationLocked: false,
 
     view: "home",
     query: "",
@@ -690,6 +694,8 @@
     els.retryBtn.addEventListener("click", () => retryCurrentServer(false));
     els.muteBtn.addEventListener("click", toggleMute);
     els.pipBtn.addEventListener("click", togglePip);
+    if (els.rotateBtn) els.rotateBtn.addEventListener("click", toggleRotate);
+    if (els.rotateExitBtn) els.rotateExitBtn.addEventListener("click", () => setCssRotate(false));
     els.fullBtn.addEventListener("click", toggleFullscreen);
     els.errorRetry.addEventListener("click", () => retryAllServers());
     els.errorProxy.addEventListener("click", () => retryCurrentServer(true));
@@ -2617,13 +2623,68 @@
     return !!(document.fullscreenElement || document.webkitFullscreenElement);
   }
 
+  function setCssRotate(on) {
+    state.rotated = !!on;
+    if (els.videoWrap) els.videoWrap.classList.toggle("is-rotated", state.rotated);
+    if (els.rotateBtn) els.rotateBtn.classList.toggle("is-active", state.rotated || state.orientationLocked);
+    if (els.rotateExitBtn) els.rotateExitBtn.hidden = !state.rotated;
+    document.body.style.overflow = state.rotated ? "hidden" : "";
+  }
+
+  async function toggleRotate() {
+    if (state.rotated) {
+      setCssRotate(false);
+      return;
+    }
+    if (state.orientationLocked || isFullscreen()) {
+      state.orientationLocked = false;
+      if (els.rotateBtn) els.rotateBtn.classList.remove("is-active");
+      try {
+        if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+      } catch {}
+      if (isFullscreen()) {
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+      return;
+    }
+
+    const wrap = els.videoWrap;
+    let locked = false;
+    if (wrap && screen.orientation && typeof screen.orientation.lock === "function") {
+      try {
+        if (wrap.requestFullscreen) await wrap.requestFullscreen();
+        else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
+        await screen.orientation.lock("landscape");
+        locked = true;
+        state.orientationLocked = true;
+        if (els.rotateBtn) els.rotateBtn.classList.add("is-active");
+      } catch {}
+    }
+    if (!locked) {
+      if (isFullscreen()) {
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+      setCssRotate(true);
+    }
+  }
+
   function onFullscreenChange() {
     const full = isFullscreen();
     els.screenTitle.hidden = !(full && state.current);
     if (full && state.current) els.screenTitle.textContent = state.current.name;
+    if (!full && state.orientationLocked) {
+      state.orientationLocked = false;
+      if (els.rotateBtn) els.rotateBtn.classList.remove("is-active");
+      try {
+        if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+      } catch {}
+    }
   }
 
   function toggleFullscreen() {
+    if (state.rotated) setCssRotate(false);
     const wrap = els.videoWrap;
     const video = els.video;
     if (isFullscreen()) {
@@ -2901,6 +2962,7 @@
     const typing = tag === "input" || tag === "textarea" || tag === "select" || (e.target && e.target.isContentEditable);
 
     if (e.key === "Escape") {
+      if (state.rotated) return setCssRotate(false);
       if ($(".modal:not([hidden])")) return closeAllModals();
       if (isFullscreen()) return;
       if (state.query) return clearSearch();
@@ -2920,6 +2982,7 @@
 
     const key = e.key.toLowerCase();
     if (key === "f") { e.preventDefault(); toggleFullscreen(); }
+    else if (key === "r") { e.preventDefault(); toggleRotate(); }
     else if (key === "m") { e.preventDefault(); toggleMute(); }
     else if (key === "p") { e.preventDefault(); togglePip(); }
   }
