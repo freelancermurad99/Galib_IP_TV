@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.freelancermurad99.twa",
+      "sha256_cert_fingerprints": [
+        "3D:43:4D:39:2C:1C:CA:51:39:FC:8F:02:CA:C8:C1:D1:FD:AB:53:3A:67:90:75:27:34:D5:B6:22:82:DC:62:7F"
+      ]
+    }
+  }
+]
