@@ -47,12 +47,45 @@ window.GTV_CONFIG = {
     ---------------------------------------------------------------- */
   ],
 
-  /* ৩. অ্যাডমিন ব্যাকআপ স্ট্রিম লিংক (Multiple Backup Links per Channel)
-     কোনো চ্যানেলের মেইন লিংক কাজ না করলে ব্রাউজার এগুলো একের পর এক ট্রাই করবে।
-     চ্যানেলের নাম অথবা মেইন URL কী হিসেবে দিয়ে অ্যারে আকারে ব্যাকআপ লিংক দিন:
-     "Somoy TV": ["https://...", "https://..."]
-  */
-  channelBackups: {},
+  /* ৩. ফিচার্ড চ্যানেল (হোম পেজে Favourites ও Recently Watched-এর সাথে দেখাবে)
+     - চ্যানেলের নাম লিখলেই M3U লিস্ট থেকে অটোমেটিক খুঁজে নেবে।
+     - M3U কাজ না করলে বা না থাকলে `ytHandle` / `fallbackUrl` (YouTube Live) দিয়ে অটো প্লে হবে। */
+  featuredChannels: [
+    { name: "T Sports", match: ["T Sports", "TSports", "T-Sports"], group: "Sports", ytHandle: "@TSportsbd" },
+    { name: "Zee Bangla", match: ["Zee Bangla", "Zee Bangla HD"], group: "Indian Entertainment" },
+    { name: "Star Jalsha", match: ["Star Jalsha", "Star Jalsha HD"], group: "Indian Entertainment" },
+    { name: "Jalsha Movies", match: ["Jalsha Movies", "Jolsha Movies", "Jalsha Movies HD"], group: "Indian Movies" },
+    { name: "Somoy TV", match: ["Somoy TV", "Somoy News"], group: "News", ytHandle: "@somoynews360" },
+    { name: "Jamuna TV", match: ["Jamuna TV", "Jamuna Television"], group: "News", ytHandle: "@JamunaTVbd" },
+    { name: "Independent TV", match: ["Independent TV", "Independent Television"], group: "News", ytHandle: "@IndependentTelevision" },
+    { name: "Channel 24", match: ["Channel 24", "Channel 24 HD"], group: "News", ytHandle: "@channel24digital" },
+    { name: "DBC News", match: ["DBC News", "DBC News TV"], group: "News", ytHandle: "@dbcnewstv" },
+    { name: "ATN News", match: ["ATN News", "ATN Bangla News"], group: "News", ytHandle: "@ATNBanglanews" },
+    { name: "Ekattor TV", match: ["Ekattor TV", "71 TV"], group: "News", ytHandle: "@ekattor_tv" },
+  ],
+
+  /* ৪. অ্যাডমিন ব্যাকআপ স্ট্রিম লিংক (M3U8 বা YouTube Live — একের পর এক ট্রাই করবে)
+     - ফুল URL অথবা { label: "YouTube Live", ytHandle: "@TSportsbd" } — দুটোই কাজ করবে। */
+  channelBackups: {
+    "T Sports": [{ label: "YouTube Live", ytHandle: "@TSportsbd" }],
+    "Somoy TV": [{ label: "YouTube Live", ytHandle: "@somoynews360" }],
+    "Jamuna TV": [{ label: "YouTube Live", ytHandle: "@JamunaTVbd" }],
+    "Independent TV": [{ label: "YouTube Live", ytHandle: "@IndependentTelevision" }],
+    "Channel 24": [{ label: "YouTube Live", ytHandle: "@channel24digital" }],
+    "DBC News": [{ label: "YouTube Live", ytHandle: "@dbcnewstv" }],
+    "ATN News": [{ label: "YouTube Live", ytHandle: "@ATNBanglanews" }],
+    "Ekattor TV": [{ label: "YouTube Live", ytHandle: "@ekattor_tv" }],
+  },
+
+  /* YouTube @handle -> Channel ID ম্যাপ (ইনস্ট্যান্ট লাইভ অটো-ডিটেক্টের জন্য) */
+  youtubeChannelIds: {
+    "@tsportsbd": "UC2t9imwIR7xlDfma3CmRKJQ",
+    "@somoynews360": "UCxHoBXkY88Tb8z1Ssj6CWsQ",
+    "@jamunatvbd": "UCN6sm8iHiPd0cnoUardDAnw",
+    "@independenttelevision": "UCATUkaOHwO9EP_W87zCiPbA",
+    "@channel24digital": "UCHLqIOMPk20w-6cFgkA90jw",
+    "@atnbanglanews": "UCbgcYEdMsuypG2NJ-znBp3w",
+  },
 
   /* ৪. হোম পেজে কোন ক্যাটাগরিগুলো সবার আগে দেখাবে (ইচ্ছামতো সাজাতে পারবেন) */
   categoryOrder: [

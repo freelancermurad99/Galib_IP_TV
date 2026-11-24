@@ -47,6 +47,9 @@
     favSection: $("#fav-section"),
     favCount: $("#fav-count"),
     favRow: $("#fav-row"),
+    featuredSection: $("#featured-section"),
+    featuredCount: $("#featured-count"),
+    featuredRow: $("#featured-row"),
     recentSection: $("#recent-section"),
     recentCount: $("#recent-count"),
     recentRow: $("#recent-row"),
@@ -150,6 +153,7 @@
     cache: new Map(),
     channels: [],
     byId: new Map(),
+    featured: [],
     favorites: [],
     recent: [],
     backups: {},
@@ -417,28 +421,64 @@
 
   /* ============================== admin + user backups ============================== */
 
+  function normChannelName(name) {
+    return String(name || "")
+      .toLowerCase()
+      .replace(/\b(hd|fhd|uhd|sd|4k|bd|live|tv|channel)\b/g, " ")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  function normalizeStreamTarget(entry) {
+    if (!entry) return null;
+    if (typeof entry === "string") {
+      if (/^yt:/i.test(entry.trim())) return { url: entry.trim(), label: "YouTube Live" };
+      const u = normalizeUrl(entry);
+      return u ? { url: u, label: "" } : null;
+    }
+    if (typeof entry === "object") {
+      if (entry.ytHandle) {
+        const h = String(entry.ytHandle).trim();
+        const handle = h.startsWith("@") ? h : "@" + h;
+        return { url: "yt:" + handle, label: String(entry.label || "YouTube Live").trim() };
+      }
+      if (entry.ytChannel) {
+        return { url: "yt:" + String(entry.ytChannel).trim(), label: String(entry.label || "YouTube Live").trim() };
+      }
+      if (entry.url) {
+        if (/^yt:/i.test(String(entry.url).trim())) {
+          return { url: String(entry.url).trim(), label: String(entry.label || "YouTube Live").trim() };
+        }
+        const u = normalizeUrl(entry.url);
+        if (u) return { url: u, label: String(entry.label || "").trim() };
+      }
+    }
+    return null;
+  }
+
   function getAdminBackupsForChannel(ch) {
     if (!ch || !CFG.channelBackups || typeof CFG.channelBackups !== "object") return [];
     const map = CFG.channelBackups;
     const targetName = (ch.name || "").trim().toLowerCase();
+    const targetNorm = normChannelName(ch.name);
     const targetUrl = (ch.url || "").trim();
     const collected = [];
 
     Object.keys(map).forEach((key) => {
       const k = key.trim();
       if (!k) return;
-      const matches = k === targetUrl || k.toLowerCase() === targetName;
+      const kl = k.toLowerCase();
+      const kn = normChannelName(k);
+      const matches =
+        k === targetUrl ||
+        kl === targetName ||
+        (kn && targetNorm && (kn === targetNorm || targetName.includes(kl)));
       if (!matches) return;
 
       const entries = Array.isArray(map[key]) ? map[key] : [map[key]];
       entries.forEach((entry) => {
-        if (typeof entry === "string") {
-          const u = normalizeUrl(entry);
-          if (u) collected.push({ url: u, label: "", source: "admin" });
-        } else if (entry && typeof entry === "object" && entry.url) {
-          const u = normalizeUrl(entry.url);
-          if (u) collected.push({ url: u, label: String(entry.label || "").trim(), source: "admin" });
-        }
+        const norm = normalizeStreamTarget(entry);
+        if (norm) collected.push({ url: norm.url, label: norm.label, source: "admin" });
       });
     });
 
@@ -626,6 +666,7 @@
     if (els.catShelves) els.catShelves.addEventListener("click", onGridClick);
     els.channelGrid.addEventListener("click", onGridClick);
     els.favRow.addEventListener("click", onGridClick);
+    if (els.featuredRow) els.featuredRow.addEventListener("click", onGridClick);
     els.recentRow.addEventListener("click", onGridClick);
     els.list.addEventListener("click", onRailClick);
     els.list.addEventListener("keydown", onRailKey);
@@ -1110,7 +1151,7 @@
 
   function isLiveKind(url) {
     const kind = G.streamKind(url || "");
-    return kind === "hls" || kind === "ts";
+    return kind === "hls" || kind === "ts" || kind === "youtube";
   }
 
   function setIdle(show) {
@@ -1169,6 +1210,7 @@
     if (!id) return null;
     return (
       state.byId.get(id) ||
+      state.featured.find((c) => c.id === id) ||
       state.favorites.find((c) => c.id === id) ||
       state.recent.find((c) => c.id === id) ||
       null
@@ -1384,6 +1426,7 @@
     renderCatBar();
     syncGroupFilter();
     renderFavourites();
+    renderFeatured();
     renderRecent();
     renderHomeGrid(true);
     renderRail(true);
@@ -1397,6 +1440,7 @@
     renderCatBar();
     syncGroupFilter();
     renderFavourites();
+    renderFeatured();
     renderRecent();
     renderHomeGrid(true);
     updateHero();
@@ -1750,6 +1794,68 @@
 
     card.append(main, star);
     return card;
+  }
+
+  function resolveFeaturedChannels() {
+    const defs = Array.isArray(CFG.featuredChannels) ? CFG.featuredChannels : [];
+    if (!defs.length) return [];
+    const out = [];
+    const usedIds = new Set();
+
+    defs.forEach((entry) => {
+      const item = typeof entry === "string" ? { name: entry, match: [entry] } : entry;
+      if (!item || !item.name) return;
+      const terms = (Array.isArray(item.match) && item.match.length ? item.match : [item.name]).map((t) =>
+        String(t).trim().toLowerCase()
+      );
+
+      let found =
+        state.channels.find((c) => terms.includes(c.name.trim().toLowerCase())) ||
+        state.channels.find((c) => {
+          const cn = c.name.trim().toLowerCase();
+          return terms.some((t) => cn.startsWith(t) || cn.includes(t));
+        });
+
+      if (found) {
+        if (!usedIds.has(found.id)) {
+          usedIds.add(found.id);
+          out.push(found);
+        }
+        return;
+      }
+
+      const fb = normalizeStreamTarget(
+        item.ytHandle ? { ytHandle: item.ytHandle } : item.ytChannel ? { ytChannel: item.ytChannel } : item.fallbackUrl
+      );
+      if (fb) {
+        const vid = "feat_" + G.m3u.hash(item.name + "|" + fb.url);
+        if (!usedIds.has(vid)) {
+          usedIds.add(vid);
+          out.push({
+            id: vid,
+            name: item.name,
+            url: fb.url,
+            logo: item.logo || "",
+            group: item.group || "Featured",
+            tvgId: "",
+            playlistId: "featured",
+            playlistName: "Featured",
+          });
+        }
+      }
+    });
+
+    return out;
+  }
+
+  function renderFeatured() {
+    if (!els.featuredSection || !els.featuredRow) return;
+    const items = resolveFeaturedChannels();
+    state.featured = items;
+    els.featuredSection.hidden = !items.length;
+    els.featuredRow.textContent = "";
+    if (els.featuredCount) els.featuredCount.textContent = items.length ? items.length + " picks" : "";
+    items.forEach((ch) => els.featuredRow.appendChild(buildCard(ch)));
   }
 
   function renderFavourites() {
@@ -2489,6 +2595,11 @@
   }
 
   function toggleMute() {
+    if (player && typeof player.toggleMute === "function") {
+      const muted = player.toggleMute();
+      els.muteBtn.classList.toggle("is-active", !!muted);
+      return;
+    }
     els.video.muted = !els.video.muted;
   }
 

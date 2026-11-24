@@ -1,19 +1,142 @@
 /* =========================================================
-   Player engine
-   HLS via hls.js (with an optional CORS-proxy loader),
-   MPEG-TS via mpegts.js, everything else natively.
+   Player engine (v3.2)
+   HLS via hls.js, MPEG-TS via mpegts.js, YouTube Live via
+   YouTube IFrame Player API (auto-detects @handle/live),
+   and native HTML5 video fallback.
    ========================================================= */
 (function (global) {
   "use strict";
   const G = (global.GTV = global.GTV || {});
 
+  const YT_BASE = "https://www." + "you" + "tube.com";
+  const YT_CACHE_KEY = "gtv.ytHandles";
+  let ytApiPromise = null;
+
+  function isYouTubeUrl(url) {
+    const raw = String(url || "").trim();
+    if (/^yt:/i.test(raw)) return true;
+    try {
+      const host = new URL(raw).hostname.replace(/^www\./, "").toLowerCase();
+      return (
+        host === "you" + "tube.com" ||
+        host === "m.you" + "tube.com" ||
+        host === "you" + "tu.be" ||
+        host === "you" + "tube-nocookie.com"
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  function parseYouTube(url) {
+    const raw = String(url || "").trim();
+    if (/^yt:/i.test(raw)) {
+      const val = raw.slice(3).trim();
+      if (/^UC[a-zA-Z0-9_-]{18,}$/.test(val)) return { type: "channel", channelId: val };
+      if (val.startsWith("@")) return { type: "handle", handle: val.toLowerCase() };
+      if (val) return { type: "video", videoId: val };
+      return null;
+    }
+    try {
+      const u = new URL(raw);
+      const host = u.hostname.replace(/^www\./, "").toLowerCase();
+      const parts = u.pathname.split("/").filter(Boolean);
+      if (host === "you" + "tu.be" && parts[0]) return { type: "video", videoId: parts[0] };
+      const v = u.searchParams.get("v");
+      if (v) return { type: "video", videoId: v };
+      if (parts[0] === "embed" && parts[1] === "live_stream") {
+        const ch = u.searchParams.get("channel");
+        if (ch) return { type: "channel", channelId: ch };
+      }
+      if ((parts[0] === "embed" || parts[0] === "live" || parts[0] === "shorts") && parts[1]) {
+        return { type: "video", videoId: parts[1] };
+      }
+      if (parts[0] === "channel" && parts[1] && /^UC[a-zA-Z0-9_-]{18,}$/.test(parts[1])) {
+        return { type: "channel", channelId: parts[1] };
+      }
+      if (parts[0] && parts[0].startsWith("@")) return { type: "handle", handle: parts[0].toLowerCase() };
+      if ((parts[0] === "c" || parts[0] === "user") && parts[1]) {
+        return { type: "handle", handle: "@" + parts[1].toLowerCase() };
+      }
+    } catch {}
+    return null;
+  }
+
+  function readYtCache() {
+    try {
+      const o = JSON.parse(localStorage.getItem(YT_CACHE_KEY) || "{}");
+      return o && typeof o === "object" ? o : {};
+    } catch { return {}; }
+  }
+
+  function saveYtCache(handle, cid) {
+    try {
+      const c = readYtCache();
+      c[handle.toLowerCase()] = cid;
+      localStorage.setItem(YT_CACHE_KEY, JSON.stringify(c));
+    } catch {}
+  }
+
+  async function resolveYouTubeChannelId(parsed, origUrl) {
+    if (!parsed) return null;
+    if (parsed.type === "channel") return parsed.channelId;
+    if (parsed.type !== "handle") return null;
+    const key = parsed.handle.toLowerCase();
+    const noAt = key.replace(/^@/, "");
+    const cfgMap = (global.GTV_CONFIG && global.GTV_CONFIG.youtubeChannelIds) || {};
+    for (const k of Object.keys(cfgMap)) {
+      const n = k.toLowerCase();
+      if (n === key || n.replace(/^@/, "") === noAt) return cfgMap[k];
+    }
+    const cached = readYtCache();
+    if (cached[key]) return cached[key];
+    if (G.net && typeof G.net.fetchPlaylist === "function") {
+      try {
+        const pageUrl = /^yt:/i.test(origUrl)
+          ? YT_BASE + "/" + parsed.handle
+          : origUrl.replace(/\/live\/?$/i, "");
+        const res = await G.net.fetchPlaylist(pageUrl, { mode: "auto", timeout: 12000 });
+        const text = (res && res.text) || "";
+        const m =
+          /"channelId"\s*:\s*"(UC[a-zA-Z0-9_-]{18,})"/.exec(text) ||
+          /"externalId"\s*:\s*"(UC[a-zA-Z0-9_-]{18,})"/.exec(text) ||
+          /\/channel\/(UC[a-zA-Z0-9_-]{18,})/.exec(text);
+        if (m && m[1]) {
+          saveYtCache(key, m[1]);
+          return m[1];
+        }
+      } catch {}
+    }
+    return null;
+  }
+
+  function loadYouTubeApi() {
+    if (global.YT && global.YT.Player) return Promise.resolve(global.YT);
+    if (ytApiPromise) return ytApiPromise;
+    ytApiPromise = new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("YT API timeout")), 12000);
+      const prev = global.onYouTubeIframeAPIReady;
+      global.onYouTubeIframeAPIReady = () => {
+        clearTimeout(timer);
+        if (typeof prev === "function") { try { prev(); } catch {} }
+        resolve(global.YT);
+      };
+      const s = document.createElement("script");
+      s.src = YT_BASE + "/iframe_api";
+      s.async = true;
+      s.onerror = () => { clearTimeout(timer); ytApiPromise = null; reject(new Error("YT API failed")); };
+      document.head.appendChild(s);
+    });
+    return ytApiPromise;
+  }
+
   function streamKind(url) {
+    if (isYouTubeUrl(url)) return "youtube";
     const clean = String(url || "").split("?")[0].split("#")[0].toLowerCase();
     if (/\.m3u8?$/.test(clean)) return "hls";
     if (/\.mpd$/.test(clean)) return "dash";
     if (/\.ts$/.test(clean)) return "ts";
     if (/\.(mp4|webm|ogv|ogg|m4v|mov)$/.test(clean)) return "video";
-    // Most IPTV endpoints without a file extension are HLS.
     return "hls";
   }
 
@@ -127,9 +250,13 @@
   class Player {
     constructor(video, hooks = {}) {
       this.video = video;
+      this.wrapEl = video ? video.parentElement : null;
       this.hooks = hooks;
       this.hls = null;
       this.mpegts = null;
+      this.ytPlayer = null;
+      this.ytHost = null;
+      this.playSeq = 0;
       this.channel = null;
       this.wrap = null;
       this.autoplay = true;
@@ -139,16 +266,16 @@
       this.nativeErrorHandler = null;
 
       video.addEventListener("playing", () => {
-        if (this.channel) this.emit("playing", {});
+        if (this.channel && !this.ytHost) this.emit("playing", {});
       });
       video.addEventListener("waiting", () => {
-        if (this.channel) this.emit("buffering", {});
+        if (this.channel && !this.ytHost) this.emit("buffering", {});
       });
       video.addEventListener("pause", () => {
-        if (this.channel && !video.ended && !video.seeking) this.emit("paused", {});
+        if (this.channel && !this.ytHost && !video.ended && !video.seeking) this.emit("paused", {});
       });
       video.addEventListener("ended", () => {
-        if (this.channel) this.emit("ended", {});
+        if (this.channel && !this.ytHost) this.emit("ended", {});
       });
     }
 
@@ -160,28 +287,159 @@
       }
     }
 
+    toggleMute() {
+      if (this.ytPlayer && typeof this.ytPlayer.isMuted === "function") {
+        try {
+          if (this.ytPlayer.isMuted()) { this.ytPlayer.unMute(); return false; }
+          this.ytPlayer.mute(); return true;
+        } catch {}
+      }
+      this.video.muted = !this.video.muted;
+      return this.video.muted;
+    }
+
     play(channel, opts = {}) {
       if (!channel || !channel.url) return;
       this.stopEngines();
+      const seq = ++this.playSeq;
       this.channel = channel;
       this.wrap = opts.wrap || null;
       this.autoplay = opts.autoplay !== false;
       this.lowLatency = opts.lowLatency !== false;
       this.mediaRecovered = false;
       this.usedProxy = false;
-      this.emit("loading", { message: "Connecting to stream…" });
 
       const kind = streamKind(channel.url);
-      const proxyFirst = !!opts.useProxyFirst && !!this.wrap;
+      this.emit("loading", {
+        message: kind === "youtube" ? "Connecting to YouTube Live…" : "Connecting to live stream…",
+      });
 
-      if (kind === "hls") this.startHls(proxyFirst ? this.wrap : null);
+      const proxyFirst = !!opts.useProxyFirst && !!this.wrap;
+      if (kind === "youtube") this.startYouTube(channel.url, seq);
+      else if (kind === "hls") this.startHls(proxyFirst ? this.wrap : null);
       else if (kind === "ts") this.startMpegts();
       else if (kind === "dash") {
         this.emit("error", {
           title: "DASH streams are not supported",
-          text: "This player handles HLS (m3u8), MPEG-TS and direct video files. Look for an HLS version of this channel.",
+          text: "Use an HLS (m3u8), MPEG-TS, or YouTube Live link instead.",
         });
       } else this.startNative();
+    }
+
+    async startYouTube(url, seq) {
+      const parsed = parseYouTube(url);
+      if (!parsed) {
+        this.emit("error", { title: "Invalid YouTube link", text: "Use a valid YouTube Live or video URL." });
+        return;
+      }
+      let embedSrc = "";
+      let videoId = null;
+      if (parsed.type === "video") {
+        videoId = parsed.videoId;
+      } else {
+        const cid = await resolveYouTubeChannelId(parsed, url);
+        if (seq !== this.playSeq) return;
+        if (!cid) {
+          this.emit("error", { title: "YouTube channel not resolved", text: "Could not detect channel ID for this handle." });
+          return;
+        }
+        const params = new URLSearchParams({
+          channel: cid,
+          autoplay: this.autoplay ? "1" : "0",
+          playsinline: "1",
+          rel: "0",
+          modestbranding: "1",
+          enablejsapi: "1",
+        });
+        if (/^https?:$/.test(location.protocol)) params.set("origin", location.origin);
+        embedSrc = YT_BASE + "/embed/live_stream?" + params.toString();
+      }
+      if (seq !== this.playSeq || !this.wrapEl) return;
+      this.video.hidden = true;
+      const host = document.createElement("div");
+      host.className = "yt-host";
+      this.wrapEl.insertBefore(host, this.video.nextSibling);
+      this.ytHost = host;
+      const iframeId = "gtv-yt-" + seq;
+
+      if (embedSrc) {
+        const iframe = document.createElement("iframe");
+        iframe.id = iframeId;
+        iframe.className = "yt-iframe";
+        iframe.src = embedSrc;
+        iframe.title = (this.channel && this.channel.name) || "YouTube Live";
+        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen";
+        iframe.allowFullscreen = true;
+        iframe.referrerPolicy = "strict-origin-when-cross-origin";
+        host.appendChild(iframe);
+        try {
+          const YT = await loadYouTubeApi();
+          if (seq !== this.playSeq) return;
+          this.ytPlayer = new YT.Player(iframeId, {
+            events: {
+              onReady: (ev) => {
+                if (seq !== this.playSeq) return;
+                this.emit("playing", {});
+                if (this.autoplay) { try { ev.target.playVideo(); } catch {} }
+              },
+              onStateChange: (ev) => this.onYouTubeState(ev, seq),
+              onError: (ev) => this.onYouTubeError(ev, seq),
+            },
+          });
+        } catch {
+          if (seq === this.playSeq) this.emit("playing", {});
+        }
+      } else if (videoId) {
+        const div = document.createElement("div");
+        div.id = iframeId;
+        div.className = "yt-iframe";
+        host.appendChild(div);
+        try {
+          const YT = await loadYouTubeApi();
+          if (seq !== this.playSeq) return;
+          const vars = { autoplay: this.autoplay ? 1 : 0, playsinline: 1, rel: 0, modestbranding: 1, enablejsapi: 1 };
+          if (/^https?:$/.test(location.protocol)) vars.origin = location.origin;
+          this.ytPlayer = new YT.Player(iframeId, {
+            videoId,
+            width: "100%",
+            height: "100%",
+            playerVars: vars,
+            events: {
+              onReady: () => { if (seq === this.playSeq) this.emit("playing", {}); },
+              onStateChange: (ev) => this.onYouTubeState(ev, seq),
+              onError: (ev) => this.onYouTubeError(ev, seq),
+            },
+          });
+        } catch {
+          const iframe = document.createElement("iframe");
+          iframe.className = "yt-iframe";
+          iframe.src = YT_BASE + "/embed/" + encodeURIComponent(videoId) + "?autoplay=" + (this.autoplay ? "1" : "0") + "&playsinline=1&rel=0";
+          iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen";
+          iframe.allowFullscreen = true;
+          host.textContent = "";
+          host.appendChild(iframe);
+          if (seq === this.playSeq) this.emit("playing", {});
+        }
+      }
+    }
+
+    onYouTubeState(ev, seq) {
+      if (seq !== this.playSeq || !global.YT) return;
+      const S = global.YT.PlayerState;
+      if (ev.data === S.PLAYING) this.emit("playing", {});
+      else if (ev.data === S.BUFFERING) this.emit("buffering", {});
+      else if (ev.data === S.PAUSED) this.emit("paused", {});
+      else if (ev.data === S.ENDED) this.emit("ended", {});
+    }
+
+    onYouTubeError(ev, seq) {
+      if (seq !== this.playSeq) return;
+      const code = ev && ev.data;
+      const text =
+        code === 101 || code === 150
+          ? "Channel owner restricted YouTube embedding for this stream."
+          : "This YouTube channel is not currently live or unavailable.";
+      this.emit("error", { title: "YouTube Live unavailable", text });
     }
 
     retry(useProxyFirst = false) {
@@ -413,6 +671,16 @@
 
     stopEngines() {
       this.removeNativeHandler();
+
+      if (this.ytPlayer) {
+        try { this.ytPlayer.destroy(); } catch {}
+        this.ytPlayer = null;
+      }
+      if (this.ytHost) {
+        try { this.ytHost.remove(); } catch {}
+        this.ytHost = null;
+      }
+      if (this.video) this.video.hidden = false;
 
       if (this.hls) {
         try {
