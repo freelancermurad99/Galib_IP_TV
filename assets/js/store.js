@@ -1,6 +1,6 @@
 /* =========================================================
    Local persistence
-   - localStorage: playlists meta, favourites, recents, settings
+   - localStorage: playlists meta, favourites, recents, backups, settings
    - IndexedDB: cached channel lists (can be several MB)
    ========================================================= */
 (function (global) {
@@ -12,8 +12,10 @@
     active: "gtv.active",
     favorites: "gtv.favorites",
     recent: "gtv.recent",
+    backups: "gtv.backups",
     settings: "gtv.settings",
     theme: "gtv.theme",
+    version: "gtv.appVersion",
   };
 
   const DEFAULT_SETTINGS = {
@@ -66,17 +68,31 @@
     },
     getFavorites() {
       const list = read(KEYS.favorites, []);
-      return Array.isArray(list) ? list : [];
+      return Array.isArray(list) ? list.filter((c) => c && c.id) : [];
     },
     saveFavorites(list) {
       return write(KEYS.favorites, list);
     },
     getRecent() {
       const list = read(KEYS.recent, []);
-      return Array.isArray(list) ? list : [];
+      return Array.isArray(list) ? list.filter((c) => c && c.id) : [];
     },
     saveRecent(list) {
       return write(KEYS.recent, list);
+    },
+    /* backups: { [channelId]: [url, ...] } */
+    getBackups() {
+      const value = read(KEYS.backups, {});
+      return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    },
+    saveBackups(map) {
+      return write(KEYS.backups, map);
+    },
+    getSeenVersion() {
+      return read(KEYS.version, null);
+    },
+    setSeenVersion(version) {
+      write(KEYS.version, version);
     },
     getSettings() {
       const s = read(KEYS.settings, {});

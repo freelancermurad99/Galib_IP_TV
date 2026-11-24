@@ -1,24 +1,24 @@
 # Galib TV — Web IPTV Player
 
-ব্রাউজারেই টিভি দেখার জন্য একটা ফ্রি, ওপেন-সোর্স IPTV প্লেয়ার। যেকোনো **M3U / M3U8** প্লেলিস্ট লিংক, ফাইল বা পেস্ট করা টেক্সট থেকে চ্যানেল লোড করে — কোনো সার্ভার, ডাটাবেস বা বিল্ড স্টেপ ছাড়াই। GitHub Pages-এ সরাসরি হোস্ট করা যায়।
+ব্রাউজারেই টিভি দেখার জন্য একটা ফ্রি, ওপেন-সোর্স IPTV প্লেয়ার। যেকোনো **M3U / M3U8** প্লেলিস্ট লিংক, ফাইল বা পেস্ট করা টেক্সট থেকে চ্যানেল লোড করে — কোনো সার্ভার, ডাটাবেস বা বিল্ড স্টেপ ছাড়াই। GitHub Pages-এ সরাসরি হোস্ট করা যায়, আবার মোবাইলে **PWA** হিসেবেও ইনস্টল করা যায়।
 
 > This app hosts **no channels**. It is only a player, like VLC. Play streams you have the right to watch.
 
-![stack](https://img.shields.io/badge/HTML-CSS-JS-22d3ee) ![no build](https://img.shields.io/badge/build-none-34d399) ![license](https://img.shields.io/badge/license-MIT-a78bfa)
+![stack](https://img.shields.io/badge/HTML-CSS-JS-22d3ee) ![no build](https://img.shields.io/badge/build-none-34d399) ![PWA](https://img.shields.io/badge/PWA-installable-a78bfa) ![license](https://img.shields.io/badge/license-MIT-34d399)
 
 ---
 
-## ✨ ফিচার
+## ✨ নতুন কী আছে (v2)
 
-- **M3U / M3U8 প্লেলিস্ট** — URL, ফাইল আপলোড বা সরাসরি পেস্ট
-- **HLS প্লেব্যাক** — `hls.js`, সাথে MPEG-TS (`mpegts.js`) ও direct MP4 সাপোর্ট
-- **একাধিক প্লেলিস্ট** — সুইচ, রিফ্রেশ, ডিলিট; চ্যানেল IndexedDB-তে ক্যাশ
-- **চ্যানেল সার্চ + গ্রুপ ফিল্টার** — ১০ হাজারের বেশি চ্যানেলেও স্মুথ (incremental rendering)
-- **Favourites ও Recently watched** — ব্রাউজারে সেভ থাকে
-- **অটো CORS fallback** — ডাইরেক্ট ফেচ ব্যর্থ হলে পাবলিক প্রোক্সি দিয়ে চেষ্টা
-- **মিক্সড-কনটেন্ট হ্যান্ডলিং** — HTTPS সাইটে `http://` স্ট্রিম হলে প্রোক্সি দিয়ে চালানোর চেষ্টা
-- **ডার্ক / লাইট থিম**, মোবাইল রেসপন্সিভ, কিবোর্ড শর্টকাট (`F`, `M`, `P`, `/`)
-- **কোনো ট্র্যাকিং নেই**, সব ডেটা শুধু আপনার ব্রাউজারে
+- **হোম + ওয়াচ — আলাদা দুই ভিউ** — হোমে সব চ্যানেল, ক্লিক করলে প্লেয়ার + সাইডবার
+- **Favourites সবার আগে** — হোমের প্রথম সেকশনেই আপনার সেভ করা চ্যানেল
+- **ক্যাটাগরি বার** — প্লেলিস্টের group অনুযায়ী চিপ, এক ক্লিকে ফিল্টার, `All` দিয়ে সব
+- **একাধিক প্লেলিস্ট একসাথে** — সব চ্যানেল merge + URL দিয়ে dedupe
+- **প্রতি চ্যানেলে ব্যাকআপ স্ট্রিম** — মূল লিংক ফেল করলে সেভ করা ব্যাকআপগুলো ক্রমে ট্রাই হয়; মূল লিংক ঠিক থাকলে সেটাই চলে
+- **ভার্সন-ড্রিভেন অটো আপডেট** — `version.js`-এ ভার্সন বাড়ালেই ইনস্টল করা PWA নিজে cache পরিষ্কার করে hard reload করে
+- **ম্যানুয়াল রিফ্রেশ** — টপবারের refresh বাটন এক ক্লিকে update check + চ্যানেল রিফ্রেশ
+- **PWA** — installable, service worker cache, offline shell
+- **ডার্ক / লাইট থিম**, মোবাইল রেসপন্সিভ, ফুলস্ক্রিন, PiP, কিবোর্ড শর্টকাট
 
 ---
 
@@ -51,13 +51,41 @@ python3 -m http.server 8080
 # http://localhost:8080
 ```
 
-(`index.html` ডাবল-ক্লিক করলেও চলবে, তবে ফাইল/ডেমো লোড করতে ছোট একটা সার্ভার ভালো।)
+(`index.html` ডাবল-ক্লিক করলেও চলবে, তবে PWA/service worker, ফাইল ও ডেমো লোড করতে ছোট একটা সার্ভার দরকার।)
+
+---
+
+## 🔄 অ্যাপ আপডেট করবেন যেভাবে (গুরুত্বপূর্ণ)
+
+পুরো অ্যাপের **একটাই version source**:
+
+**`assets/js/version.js`**
+
+```js
+window.GTV_APP_VERSION = "2.0.0";
+window.GTV_BUILD_DATE = "2026-11-24";
+```
+
+HTML / CSS / JS / config / প্লেলিস্ট — যেকোনো কিছু বদলানোর পর:
+
+1. `GTV_APP_VERSION` বাড়িয়ে দিন — যেমন `"2.0.0"` → `"2.0.1"`
+2. চাইলে `GTV_BUILD_DATE`-ও বদলান
+3. commit + push
+
+এরপর যা হয়:
+
+- অ্যাপ লোড হওয়ার ~৬ সেকেন্ড পর, প্রতি ~৩ মিনিটে এবং ট্যাবে ফিরে এলে remote `version.js` চেক করে
+- নতুন ভার্সন পেলে **সব cache মুছে, service worker unregister করে** `?v=<new-version>` দিয়ে hard reload করে
+- ব্যবহারকারী চাইলে টপবারের **refresh** বাটন বা **Settings → Check now** দিয়েও সাথে সাথে চেক করতে পারে
+- ম্যানুয়াল চেকের সময় নতুন ভার্সন না থাকলে চ্যানেল প্লেলিস্টগুলোও রিফ্রেশ হয়
+
+> ইনস্টল করা PWA-তে একবার reload হলে নতুন HTML/CSS/JS সব `?v=` সহ লোড হয়, তাই পুরোনো HTTP cache আটকে থাকে না।
 
 ---
 
 ## 📺 ডিফল্ট চ্যানেল বদল / আরও যোগ করা
 
-সাইট খোলার সাথে সাথে যে প্লেলিস্ট লোড হবে সেটা ঠিক করা আছে এখানে:
+সাইট খোলার সাথে সাথে যে প্লেলিস্টগুলো লোড হবে সেগুলো ঠিক করা আছে এখানে:
 
 **`assets/js/config.js`**
 
@@ -65,6 +93,7 @@ python3 -m http.server 8080
 window.GTV_CONFIG = {
   defaultPlaylists: [
     {
+      id: "bdix",
       name: "BDIX IPTV (Bangladesh)",
       url: "https://raw.githubusercontent.com/saeidrahmanbd/BDIX-IPTV/main/IPTV-Playlist.m3u",
       enabled: true,
@@ -72,6 +101,7 @@ window.GTV_CONFIG = {
 
     // আরও একটা যোগ করতে চাইলে:
     {
+      id: "news",
       name: "News channels",
       url: "https://iptv-org.github.io/iptv/categories/news.m3u",
       enabled: true,
@@ -79,15 +109,33 @@ window.GTV_CONFIG = {
   ],
 
   ensureDefaults: true,
+  autoRefreshMinutes: 20,
 };
 ```
 
-- `name` — সাইডবারে যে নাম দেখাবে
+- `id` — স্থির আইডি; URL বদলালেও পুরোনো প্লেলিস্টের জায়গায় আপডেট হয়, ডুপ্লিকেট হয় না
+- `name` — UI-তে যে নাম দেখাবে
 - `url` — প্লেলিস্টের ডাইরেক্ট লিংক (`.m3u` / `.m3u8`)
 - `enabled: false` — এন্ট্রি থাকবে কিন্তু লোড হবে না
-- `ensureDefaults: true` — কেউ ডিলিট করলেও রিফ্রেশে ডিফল্ট আবার যোগ হবে। ডিলিট永久 করতে চাইলে `false` করুন।
+- `ensureDefaults: true` — কেউ ডিলিট করলেও অ্যাপ খুললে ডিফল্ট আবার যোগ হবে
+- `autoRefreshMinutes` — কত মিনিট পর পর প্লেলিস্ট auto-refresh হবে
 
-**প্রথম ভিজিটে** সব `enabled` প্লেলিস্ট অটো-লোড হয় এবং প্রথমটা অ্যাক্টিভ থাকে। পরে ব্যবহারকারী নিজের প্লেলিস্ট যোগ করলে সেটাই সেভ থাকে (localStorage + IndexedDB)।
+**অ্যাডমিন কিছু যোগ করলে ব্যবহারকারীর কিছু করতে হবে না:** নতুন প্লেলিস্ট config-এ যোগ করে version বাড়ালে অ্যাপ hard reload হয়ে নতুন প্লেলিস্ট নিয়ে আসবে; একই প্লেলিস্টে নতুন চ্যানেল যোগ হলে auto/manual refresh-এ merged লিস্টে চলে আসবে।
+
+---
+
+## 💾 প্রতি চ্যানেলে ব্যাকআপ স্ট্রিম
+
+1. যে চ্যানেল চালাচ্ছেন, তার নিচে **Backup** বাটনে ক্লিক করুন
+2. ব্যাকআপ `.m3u8` / স্ট্রিম URL দিন → **Save only** বা **Save & play**
+3. একাধিক ব্যাকআপ সেভ করা যাবে; তালিকা থেকে **Play** / **Remove** করা যাবে
+
+নিয়ম:
+
+- চ্যানেল খোলার সময় **সবসময় মূল (primary) লিংকই** আগে চলে
+- মূল লিংক ব্যর্থ হলে (network / media error) সেভ করা ব্যাকআপগুলো **ক্রমে** ট্রাই হয়
+- ব্যাকআপ চললে প্লেয়ারে **BACKUP** ব্যাজ দেখায়
+- ব্যাকআপগুলো শুধু আপনার ব্রাউজারে (`localStorage`) সেভ থাকে
 
 ---
 
@@ -127,7 +175,86 @@ export default {
 
 এতে প্লেলিস্ট + স্ট্রিম সেগমেন্ট — সব এই প্রোক্সি দিয়ে যাবে।
 
-> HEVC / AC-3 অডিও অনেক ব্রাউজারে চলে না (Chrome/Firefox)। এমন চ্যানেলে "codec not supported" এরর আসবে — এটা প্লেয়ারের সীমাবদ্ধতা, লিংকের নয়।
+> HEVC / AC-3 অডিও অনেক ব্রাউজারে চলে না (Chrome/Firefox)। এমন চ্যানেলে "codec not supported" এরর আসবে — এটা প্লেয়ারের সীমাবদ্ধতা, লিংকের নয়। BDIX চ্যানেলগুলো সাধারণত ISP/BDIX নেটওয়ার্কেই কাজ করে।
+
+---
+
+## 📱 PWA হিসেবে ইনস্টল
+
+- **Android / Chrome / Edge:** অ্যাড্রেস বারের install আইকন, অথবা মেনু → *Install app*
+- **iPhone / iPad (Safari):** Share → *Add to Home Screen*
+- ইনস্টল হলে আলাদা উইন্ডোতে খোলে, offline shell ও cache থাকে
+
+Service worker (`sw.js`) same-origin ফাইলের জন্য **network-first**; অনলাইনে নতুন ফাইল পেলেই cache আপডেট হয়, অফলাইনে সর্বশেষ cache থেকে চলে।
+
+---
+
+## 🎨 লোগো ও আইকন বদলানো
+
+বর্তমান ব্র্যান্ড অ্যাসেট:
+
+```
+assets/logo.png                 # 512×512 (social / fallback)
+assets/logo.webp                # 768×768 (হোম হিরো)
+assets/brand-mark.png           # টপবার / ফুটারের ছোট মার্ক
+assets/icons/icon.svg           # ভেক্টর আইকন
+assets/icons/icon-192.png
+assets/icons/icon-512.png
+assets/icons/icon-maskable-512.png
+assets/icons/apple-touch-icon.png
+assets/icons/favicon-192.png
+assets/favicon-32.png
+```
+
+নিজের লোগো বসাতে চাইলে একই নামে ফাইলগুলো রিপ্লেস করুন (স্কয়ার, কমপক্ষে 512×512)। macOS-এ দ্রুত রিসাইজ:
+
+```bash
+sips -z 512 512 your-logo.png --out assets/icons/icon-512.png
+sips -z 192 192 your-logo.png --out assets/icons/icon-192.png
+sips -z 180 180 your-logo.png --out assets/icons/apple-touch-icon.png
+```
+
+> Maskable আইকনে লোগোর চারপাশে নিরাপদ মার্জিন রাখুন, নাহলে কিছু Android লঞ্চারে কোণা কাটা পড়তে পারে।
+
+---
+
+## 📁 ফাইল স্ট্রাকচার
+
+```
+Galib_IP_Tv/
+├── index.html                 # হোম + ওয়াচ UI, মোডাল, versioned asset loader
+├── sw.js                      # PWA service worker (network-first cache)
+├── manifest.webmanifest       # installable PWA metadata + icons
+├── assets/
+│   ├── css/style.css          # সব স্টাইল (ডার্ক/লাইট, মোবাইল, fullscreen)
+│   ├── logo.png / logo.webp
+│   ├── brand-mark.png
+│   ├── favicon-32.png
+│   ├── icons/                 # PWA + Apple touch icons
+│   └── js/
+│       ├── version.js         # ⭐ অ্যাপ ভার্সন (আপডেট করলে এখানে বাড়ান)
+│       ├── config.js          # ⭐ ডিফল্ট প্লেলিস্ট (এখানে এডিট করুন)
+│       ├── m3u.js             # M3U parser + stable URL hash
+│       ├── store.js           # localStorage + IndexedDB (favourites/backups/cache)
+│       ├── net.js             # fetch + CORS proxy fallback
+│       ├── player.js          # hls.js / mpegts.js / native engine
+│       └── app.js             # হোম/ওয়াচ UI, backups, version check
+├── sample/demo.m3u            # ৫টা ফ্রি পাবলিক চ্যানেল (ডেমো)
+├── .nojekyll                  # GitHub Pages-এর জন্য
+└── README.md
+```
+
+---
+
+## ⌨️ কীবোর্ড শর্টকাট
+
+| কী | কাজ |
+|---|---|
+| `/` | সার্চে ফোকাস |
+| `F` | ফুলস্ক্রিন |
+| `M` | মিউট |
+| `P` | Picture-in-Picture |
+| `Esc` | মোডাল / সার্চ / ওয়াচ ভিউ বন্ধ |
 
 ---
 
@@ -143,42 +270,7 @@ export default {
 | [chikosan/openiptv](https://github.com/chikosan/openiptv) | Next.js | EPG, Chromecast, recording-সহ বড় প্রজেক্ট |
 | [noeljoan/internet-tv](https://github.com/noeljoan/internet-tv) | Flask + hls.js | সার্ভার-সাইড প্রোক্সি লাগলে |
 
-এই ভার্সনটা ফর্ক না করে ফ্রম স্ক্র্যাচে বানানো — কারণ লক্ষ্য ছিল **zero build, এক ফাইলে কনফিগ, GitHub Pages-ready, একাধিক প্লেলিস্ট + অটো proxy fallback**।
-
----
-
-## 📁 ফাইল স্ট্রাকচার
-
-```
-Galib_IP_Tv/
-├── index.html                 # UI
-├── assets/
-│   ├── css/style.css          # সব স্টাইল
-│   ├── favicon.svg
-│   └── js/
-│       ├── config.js          # ⭐ ডিফল্ট প্লেলিস্ট (এখানে এডিট করুন)
-│       ├── m3u.js             # M3U parser
-│       ├── store.js           # localStorage + IndexedDB
-│       ├── net.js             # fetch + CORS proxy fallback
-│       ├── player.js          # hls.js / mpegts.js engine
-│       └── app.js             # UI logic
-├── sample/demo.m3u            # ৫টা ফ্রি পাবলিক চ্যানেল (ডেমো)
-├── manifest.webmanifest
-├── .nojekyll                  # GitHub Pages-এর জন্য
-└── README.md
-```
-
----
-
-## ⌨️ কীবোর্ড শর্টকাট
-
-| কী | কাজ |
-|---|---|
-| `/` | সার্চে ফোকাস |
-| `F` | ফুলস্ক্রিন |
-| `M` | মিউট |
-| `P` | Picture-in-Picture |
-| `Esc` | মোডাল / সার্চ বন্ধ |
+এই ভার্সনটা ফর্ক না করে ফ্রম স্ক্র্যাচে বানানো — কারণ লক্ষ্য ছিল **zero build, এক ফাইলে কনফিগ, GitHub Pages-ready, একাধিক প্লেলিস্ট + অটো proxy fallback + PWA auto-update**।
 
 ---
 

@@ -1,0 +1,16 @@
+/* =========================================================
+   Galib TV — APP VERSION (single source of truth)
+   ---------------------------------------------------------
+   ⚠️  IMPORTANT / গুরুত্বপূর্ণ:
+   সাইটের ফাইল (HTML/CSS/JS/config) পরিবর্তন করার পর
+   নিচের `GTV_APP_VERSION` বাড়িয়ে দিন — যেমন "2.0.0" → "2.0.1".
+
+   ব্যবহারকারীর ইনস্টল করা PWA নিজেই নতুন ভার্সন খুঁজে পাবে,
+   cache পরিষ্কার করে hard reload করবে। মেনুবারের refresh
+   বাটন দিয়েও manually check করা যাবে।
+
+   Change this version whenever you update the app or config.
+   ========================================================= */
+
+window.GTV_APP_VERSION = "2.0.0";
+window.GTV_BUILD_DATE = "2026-11-24";

@@ -6,20 +6,26 @@
 
    How to use:
    1. Add / remove / reorder entries in `defaultPlaylists`.
-   2. Set `enabled: false` to keep an entry but not load it.
-   3. Commit & push — GitHub Pages will serve the change.
+   2. Give every entry a short unique `id` — this lets the app
+      update the URL later without creating a duplicate.
+   3. Set `enabled: false` to keep an entry but not load it.
+   4. After editing this file bump `assets/js/version.js` too,
+      so installed PWAs reload automatically.
+   5. Commit & push — GitHub Pages will serve the change.
 
-   - First visit: সব `enabled` প্লেলিস্ট অটো লোড হবে,
-     আর প্রথমটা একটিভ থাকবে।
-   - `ensureDefaults: true` মানে — পরে কেউ ডিলিট করলেও
-     সাইট রিফ্রেশে ডিফল্ট প্লেলিস্ট আবার যোগ হবে।
-     পুরোপুরি ডিলিট করতে চাইলে এটাকে `false` করুন।
+   - First visit: every `enabled` playlist is added automatically,
+     and all channels are merged into one home page list.
+   - `ensureDefaults: true` means deleted defaults come back on the
+     next visit. Set it to `false` to let users delete them.
+   - `autoRefreshMinutes`: how often playlist URLs are re-fetched
+     in the background so admin-added channels appear by themselves.
    ========================================================= */
 
 window.GTV_CONFIG = {
   /* Default playlists shown to every new visitor */
   defaultPlaylists: [
     {
+      id: "bdix",
       name: "BDIX IPTV (Bangladesh)",
       url: "https://raw.githubusercontent.com/saeidrahmanbd/BDIX-IPTV/main/IPTV-Playlist.m3u",
       enabled: true,
@@ -27,13 +33,15 @@ window.GTV_CONFIG = {
 
     /* ---- more examples (uncomment / copy-paste) --------------------
     {
-      name: "News channels",
-      url: "https://iptv-org.github.io/iptv/categories/news.m3u",
+      id: "bd-iptv-org",
+      name: "Bangladesh (iptv-org)",
+      url: "https://iptv-org.github.io/iptv/countries/bd.m3u",
       enabled: true,
     },
     {
-      name: "My backup playlist",
-      url: "https://example.com/my-channels.m3u",
+      id: "news",
+      name: "News channels",
+      url: "https://iptv-org.github.io/iptv/categories/news.m3u",
       enabled: false,
     },
     ---------------------------------------------------------------- */
@@ -41,4 +49,7 @@ window.GTV_CONFIG = {
 
   /* Re-add missing defaults on every visit (set false to allow deleting them) */
   ensureDefaults: true,
+
+  /* Refresh playlist URLs in the background (minutes) */
+  autoRefreshMinutes: 20,
 };
