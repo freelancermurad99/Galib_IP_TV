@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Galib TV — Live OTT",
-  "short_name": "Galib TV",
-  "description": "Galib TV — Watch curated live TV channels in a fast, mobile-friendly OTT experience.",
+  "name": "Galib IPTV — Live OTT",
+  "short_name": "Galib IPTV",
+  "description": "Galib IPTV — Watch curated live TV channels in a fast, mobile-friendly OTT experience.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "./",

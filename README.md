@@ -1,4 +1,4 @@
-# Galib TV
+# Galib IPTV
 
 A lightweight static web IPTV player built with vanilla HTML, CSS, and JavaScript. Runs directly on GitHub Pages with no backend or build step, and works as an installable PWA on mobile and desktop.
 

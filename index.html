@@ -3,25 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Galib TV — Web IPTV Player</title>
-  <meta name="description" content="A fast, free, open-source web IPTV player. Load any M3U / M3U8 playlist and watch live TV right in your browser. No server, no build step, works on GitHub Pages." />
-  <meta name="theme-color" content="#080b10" />
+  <title>Galib IPTV — Live OTT Streaming</title>
+  <meta name="description" content="Galib IPTV — Watch curated live TV channels in a fast, mobile-friendly OTT experience right in your browser." />
+  <meta name="theme-color" content="#060911" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Galib TV" />
+  <meta name="apple-mobile-web-app-title" content="Galib IPTV" />
   <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png" />
   <link rel="icon" href="assets/icons/favicon-192.png" sizes="192x192" type="image/png" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <meta property="og:title" content="Galib TV — Web IPTV Player" />
-  <meta property="og:description" content="Watch live TV from any M3U / M3U8 playlist in your browser. Free, fast and installable." />
+  <meta property="og:title" content="Galib IPTV — Live OTT Streaming" />
+  <meta property="og:description" content="Watch live TV channels on mobile and desktop with Galib IPTV." />
   <meta property="og:image" content="assets/logo.png" />
   <meta property="og:type" content="website" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/style.css?v=3.3.0" />
+  <link rel="stylesheet" href="assets/css/style.css?v=3.3.2" />
 </head>
 <body>
   <div class="ambient" aria-hidden="true"></div>
@@ -31,12 +31,12 @@
       <button class="icon-btn back-btn" id="btn-back" type="button" title="Back to home" aria-label="Back to home" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
-      <a class="brand" href="./" id="brand" aria-label="Galib TV home">
+      <a class="brand" href="./" id="brand" aria-label="Galib IPTV home">
         <span class="brand-logo-wrap">
           <img class="brand-logo" src="assets/logo.webp" width="40" height="40" alt="Galib IPTV logo" />
         </span>
         <span class="brand-text">
-          <span class="brand-name">Galib<span>TV</span></span>
+          <span class="brand-name">Galib <span>IPTV</span></span>
           <span class="brand-tag"><i></i>LIVE OTT</span>
         </span>
       </a>
@@ -53,7 +53,7 @@
       <button class="icon-btn" id="btn-refresh-app" type="button" title="Check updates & refresh channels" aria-label="Check updates and refresh">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
-      <button class="icon-btn install-btn" id="btn-install" type="button" title="Install Galib TV app" aria-label="Install app" hidden>
+      <button class="icon-btn install-btn" id="btn-install" type="button" title="Install Galib IPTV app" aria-label="Install app" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <button class="icon-btn" id="btn-theme" type="button" title="Toggle theme" aria-label="Toggle theme">
@@ -78,7 +78,7 @@
           <span class="pill-live"><i></i>LIVE NOW</span>
           <span class="pill-meta" id="hero-stats">Loading live lineup…</span>
         </div>
-        <h1 id="hero-title">Galib TV <span class="grad-text">Live</span></h1>
+        <h1 id="hero-title">Galib <span class="grad-text">IPTV</span></h1>
         <p class="spotlight-sub" id="hero-sub">Watch curated live TV channels — instant playback with automatic backup servers.</p>
         <div class="spotlight-actions">
           <button class="btn btn-primary" type="button" id="btn-resume" hidden>▶ Continue Watching</button>
@@ -132,8 +132,8 @@
 
     <footer class="footer">
       <span class="footer-brand">
-        <img src="assets/logo.webp" width="26" height="26" alt="Galib TV" />
-        <span>Galib TV</span>
+        <img src="assets/logo.webp" width="26" height="26" alt="Galib IPTV" />
+        <span>Galib IPTV</span>
       </span>
       <span class="footer-note">Live OTT Streaming · Auto-updating PWA</span>
       <span class="footer-ver" id="footer-version"></span>
@@ -342,7 +342,7 @@
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
       <header class="modal-head">
         <div class="modal-brand-head">
-          <img src="assets/logo.webp" width="36" height="36" alt="Galib TV" />
+          <img src="assets/logo.webp" width="36" height="36" alt="Galib IPTV" />
           <div>
             <h3 id="settings-title">Menu &amp; Settings</h3>
             <p><span id="version-label"></span></p>
@@ -356,7 +356,7 @@
           <p class="manage-title">App updates</p>
           <div class="manage-item">
             <div class="manage-info">
-              <strong id="app-version">Galib TV</strong>
+              <strong id="app-version">Galib IPTV</strong>
               <span>Checks for new channel lineups &amp; app versions</span>
             </div>
             <button class="mini-btn accent" type="button" id="btn-check-update">Check now</button>
@@ -454,12 +454,12 @@
   <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mpegts.js@1/dist/mpegts.js"></script>
-  <script src="assets/js/m3u.js?v=3.3.0"></script>
-  <script src="assets/js/store.js?v=3.3.0"></script>
-  <script src="assets/js/net.js?v=3.3.0"></script>
-  <script src="assets/js/player.js?v=3.3.0"></script>
-  <script src="assets/js/version.js?v=3.3.0"></script>
-  <script src="assets/js/config.js?v=3.3.0"></script>
-  <script src="assets/js/app.js?v=3.3.0"></script>
+  <script src="assets/js/m3u.js?v=3.3.2"></script>
+  <script src="assets/js/store.js?v=3.3.2"></script>
+  <script src="assets/js/net.js?v=3.3.2"></script>
+  <script src="assets/js/player.js?v=3.3.2"></script>
+  <script src="assets/js/version.js?v=3.3.2"></script>
+  <script src="assets/js/config.js?v=3.3.2"></script>
+  <script src="assets/js/app.js?v=3.3.2"></script>
 </body>
 </html>

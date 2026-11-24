@@ -848,9 +848,10 @@
     document.body.classList.remove("is-watch");
     setBottomNavActive("home");
 
-    if (wasWatch && els.video && !els.video.paused) {
-      try { els.video.pause(); } catch {}
+    if (wasWatch && player) {
+      player.pause();
     }
+    if (state.rotated) setCssRotate(false);
 
     if (pushHistory !== false && wasWatch) {
       history.pushState({ gtv: "home" }, "", location.pathname + location.search);
@@ -860,7 +861,7 @@
     state.catExpanded = false;
     renderHome();
     setStatus("Ready");
-    document.title = "Galib TV — Live OTT Streaming";
+    document.title = "Galib IPTV — Live OTT Streaming";
     window.scrollTo({ top: 0, behavior: "auto" });
   }
 
@@ -899,7 +900,7 @@
   function resumeLast() {
     if (state.current) {
       showWatch(true, state.current.id);
-      const p = els.video.play();
+      const p = player ? player.resume() : null;
       if (p && typeof p.catch === "function") {
         p.catch(() => {
           setStatus("Press play");
@@ -911,7 +912,7 @@
     const last = state.recent[0];
     const ch = last ? findChannel(last.id) || last : null;
     if (ch) playChannel(ch);
-    else watchFirstChannel();
+    else toast("Nothing to resume yet.", "warn");
   }
 
   /* ============================== playback & sequential backup fallback ============================== */
@@ -1083,7 +1084,7 @@
         els.liveBadge.hidden = !isLiveKind(state.playingUrl);
         els.backupBadge.hidden = !state.usingBackup;
         els.screenTitle.hidden = !isFullscreen();
-        if (state.current) document.title = state.current.name + " · Galib TV";
+        if (state.current) document.title = state.current.name + " · Galib IPTV";
         setStatus(isLiveKind(state.playingUrl) ? "Live" : "Playing", "live");
         break;
 
@@ -1174,7 +1175,7 @@
       setLogo(els.nowLogo, null);
       els.favBtn.classList.remove("is-active");
       els.sourceBar.hidden = true;
-      document.title = "Galib TV — Live OTT Streaming";
+      document.title = "Galib IPTV — Live OTT Streaming";
       return;
     }
     els.nowTitle.textContent = channel.name;
@@ -2577,7 +2578,7 @@
   }
 
   async function resetEverything() {
-    if (!confirm("Reset local cache and reload Galib TV?")) return;
+    if (!confirm("Reset local cache and reload Galib IPTV?")) return;
     G.store.reset();
     await G.store.clearChannelCache();
     try {
@@ -2806,7 +2807,7 @@
     window.addEventListener("appinstalled", () => {
       state.deferredInstall = null;
       els.installBtn.hidden = true;
-      toast("Galib TV installed!", "ok");
+      toast("Galib IPTV installed!", "ok");
     });
 
     const ua = navigator.userAgent || "";
@@ -2859,7 +2860,7 @@
   function setVersionLabel() {
     const label = "v" + APP_VERSION + (BUILD_DATE ? " · " + BUILD_DATE : "");
     if (els.versionLabel) els.versionLabel.textContent = label;
-    if (els.appVersion) els.appVersion.textContent = "Galib TV v" + APP_VERSION;
+    if (els.appVersion) els.appVersion.textContent = "Galib IPTV v" + APP_VERSION;
     if (els.footerVersion) els.footerVersion.textContent = "v" + APP_VERSION;
   }
 
@@ -2936,7 +2937,7 @@
     try { sessionStorage.setItem(guardKey, String(Date.now())); } catch {}
 
     setStatus("Updating…", "busy");
-    toast("Updating Galib TV to v" + remoteVersion + "…", "ok", 3000);
+    toast("Updating Galib IPTV to v" + remoteVersion + "…", "ok", 3000);
 
     try {
       const keys = await caches.keys();

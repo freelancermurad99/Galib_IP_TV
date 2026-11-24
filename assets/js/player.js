@@ -298,6 +298,49 @@
       return this.video.muted;
     }
 
+    pause() {
+      if (this.ytHost) {
+        try {
+          if (this.ytPlayer && typeof this.ytPlayer.pauseVideo === "function") {
+            this.ytPlayer.pauseVideo();
+          }
+          const iframe = this.ytHost.querySelector("iframe");
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage(
+              JSON.stringify({ event: "command", func: "pauseVideo", args: [] }),
+              "*"
+            );
+          }
+        } catch {}
+      }
+      if (this.video && !this.video.paused) {
+        try { this.video.pause(); } catch {}
+      }
+    }
+
+    resume() {
+      if (this.ytHost) {
+        try {
+          if (this.ytPlayer && typeof this.ytPlayer.playVideo === "function") {
+            this.ytPlayer.playVideo();
+          }
+          const iframe = this.ytHost.querySelector("iframe");
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage(
+              JSON.stringify({ event: "command", func: "playVideo", args: [] }),
+              "*"
+            );
+          }
+        } catch {}
+        return Promise.resolve();
+      }
+      try {
+        return this.video.play() || Promise.resolve();
+      } catch {
+        return Promise.resolve();
+      }
+    }
+
     play(channel, opts = {}) {
       if (!channel || !channel.url) return;
       this.stopEngines();
