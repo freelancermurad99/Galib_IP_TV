@@ -43,7 +43,6 @@
     heroTitle: $("#hero-title"),
     heroSub: $("#hero-sub"),
     heroStats: $("#hero-stats"),
-    watchFirstBtn: $("#btn-watch-first"),
     resumeBtn: $("#btn-resume"),
     favSection: $("#fav-section"),
     favCount: $("#fav-count"),
@@ -51,11 +50,14 @@
     recentSection: $("#recent-section"),
     recentCount: $("#recent-count"),
     recentRow: $("#recent-row"),
+    browseTitleText: $("#browse-title-text"),
     browseCount: $("#browse-count"),
+    allCatsBtn: $("#btn-all-cats"),
     playlistFilterWrap: $("#playlist-filter-wrap"),
     playlistFilter: $("#playlist-filter"),
     refreshAllBtn: $("#btn-refresh-all"),
     catBar: $("#cat-bar"),
+    catShelves: $("#cat-shelves"),
     channelGrid: $("#channel-grid"),
     gridMore: $("#grid-more"),
     gridMoreBtn: $("#btn-grid-more"),
@@ -603,8 +605,10 @@
     els.backBtn.addEventListener("click", () => showHome(true));
     els.hintHome.addEventListener("click", () => showHome(true));
     els.idleHome.addEventListener("click", () => showHome(true));
-    els.watchFirstBtn.addEventListener("click", watchFirstChannel);
     els.resumeBtn.addEventListener("click", resumeLast);
+    if (els.allCatsBtn) {
+      els.allCatsBtn.addEventListener("click", () => openCategoryView("all"));
+    }
 
     els.bottomNavBtns.forEach((btn) =>
       btn.addEventListener("click", () => onBottomNav(btn.dataset.bnav))
@@ -619,6 +623,7 @@
     els.moreBtn.addEventListener("click", appendRailPage);
 
     els.catBar.addEventListener("click", onCatClick);
+    if (els.catShelves) els.catShelves.addEventListener("click", onGridClick);
     els.channelGrid.addEventListener("click", onGridClick);
     els.favRow.addEventListener("click", onGridClick);
     els.recentRow.addEventListener("click", onGridClick);
@@ -1397,6 +1402,28 @@
     updateHero();
   }
 
+  function sortCategoryEntries(entries) {
+    const pref = (Array.isArray(CFG.categoryOrder) ? CFG.categoryOrder : []).map((s) =>
+      String(s).toLowerCase()
+    );
+    const demote = (Array.isArray(CFG.demoteCategories) ? CFG.demoteCategories : []).map((s) =>
+      String(s).toLowerCase()
+    );
+    return entries.slice().sort((a, b) => {
+      const an = a[0].toLowerCase();
+      const bn = b[0].toLowerCase();
+      const ad = demote.includes(an) ? 1 : 0;
+      const bd = demote.includes(bn) ? 1 : 0;
+      if (ad !== bd) return ad - bd;
+      const ai = pref.indexOf(an);
+      const bi = pref.indexOf(bn);
+      if (ai >= 0 && bi >= 0) return ai - bi;
+      if (ai >= 0) return -1;
+      if (bi >= 0) return 1;
+      return b[1] - a[1] || a[0].localeCompare(b[0]);
+    });
+  }
+
   function renderCatBar() {
     const base = state.channels.filter((c) => {
       if (state.playlistFilter !== "all" && c.playlistId !== state.playlistFilter) return false;
@@ -1413,8 +1440,8 @@
 
     if (state.group !== "all" && !counts.has(state.group)) state.group = "all";
 
-    const entries = Array.from(counts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-    const max = state.catExpanded ? entries.length : 18;
+    const entries = sortCategoryEntries(Array.from(counts.entries()));
+    const max = state.catExpanded ? entries.length : 14;
     const shown = entries.slice(0, max);
 
     els.catBar.textContent = "";
@@ -1455,6 +1482,18 @@
     return btn;
   }
 
+  function openCategoryView(group) {
+    state.group = group || "all";
+    renderCatBar();
+    syncGroupFilter();
+    renderHomeGrid(true);
+    renderRail(true);
+    const browseEl = $("#browse-section");
+    if (browseEl && state.view === "home") {
+      browseEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
   function onCatClick(e) {
     const btn = e.target.closest("[data-group]");
     if (!btn) return;
@@ -1464,11 +1503,7 @@
       renderCatBar();
       return;
     }
-    state.group = group;
-    renderCatBar();
-    syncGroupFilter();
-    renderHomeGrid(true);
-    renderRail(true);
+    openCategoryView(group);
   }
 
   function computeHomeList() {
@@ -1489,6 +1524,70 @@
     return list;
   }
 
+  function renderCategoryShelves(baseChannels) {
+    if (!els.catShelves) return;
+    els.catShelves.textContent = "";
+    const grouped = new Map();
+    baseChannels.forEach((c) => {
+      const g = c.group || "General";
+      if (!grouped.has(g)) grouped.set(g, []);
+      grouped.get(g).push(c);
+    });
+
+    const ordered = sortCategoryEntries(
+      Array.from(grouped.entries()).map(([name, list]) => [name, list.length])
+    );
+
+    const SHELF_LIMIT = 16;
+    const frag = document.createDocumentFragment();
+
+    ordered.forEach(([groupName, count]) => {
+      const items = grouped.get(groupName) || [];
+      const shelf = document.createElement("div");
+      shelf.className = "cat-shelf";
+
+      const head = document.createElement("div");
+      head.className = "shelf-head";
+      const title = document.createElement("h3");
+      title.className = "shelf-title";
+      title.textContent = groupName;
+      const badge = document.createElement("span");
+      badge.className = "shelf-count";
+      badge.textContent = count.toLocaleString();
+      title.appendChild(badge);
+
+      const allBtn = document.createElement("button");
+      allBtn.type = "button";
+      allBtn.className = "shelf-all-btn";
+      allBtn.dataset.openCat = groupName;
+      allBtn.textContent = "Show all →";
+
+      head.append(title, allBtn);
+
+      const rail = document.createElement("div");
+      rail.className = "h-rail";
+      const preview = items.slice(0, SHELF_LIMIT);
+      preview.forEach((ch) => rail.appendChild(buildCard(ch)));
+
+      if (items.length > SHELF_LIMIT) {
+        const moreCard = document.createElement("button");
+        moreCard.type = "button";
+        moreCard.className = "card-show-all";
+        moreCard.dataset.openCat = groupName;
+        moreCard.innerHTML =
+          '<span class="all-arrow">→</span><strong>Show all</strong><span>' +
+          items.length.toLocaleString() +
+          " channels</span>";
+        rail.appendChild(moreCard);
+      }
+
+      shelf.append(head, rail);
+      frag.appendChild(shelf);
+    });
+
+    els.catShelves.appendChild(frag);
+  }
+
   function renderHomeGrid(reset) {
     state.homeRenderToken++;
     state.homeList = computeHomeList();
@@ -1498,6 +1597,8 @@
     }
 
     if (state.loading && !state.channels.length) {
+      if (els.catShelves) els.catShelves.hidden = true;
+      els.channelGrid.hidden = false;
       renderSkeletons();
       els.gridMore.hidden = true;
       updateBrowseCount();
@@ -1505,14 +1606,40 @@
     }
 
     if (!state.homeList.length) {
+      if (els.catShelves) els.catShelves.hidden = true;
+      els.channelGrid.hidden = false;
       renderHomeEmpty();
       els.gridMore.hidden = true;
       updateBrowseCount();
       return;
     }
 
-    if (state.homeShown === 0) appendHomePage();
-    els.gridMore.hidden = state.homeShown >= state.homeList.length;
+    /* OTT Category Shelves Mode: stacked horizontal category sliders */
+    if (state.group === "all" && !state.query && els.catShelves) {
+      els.catShelves.hidden = false;
+      els.channelGrid.hidden = true;
+      els.gridMore.hidden = true;
+      if (els.allCatsBtn) els.allCatsBtn.hidden = true;
+      if (els.browseTitleText) els.browseTitleText.textContent = "Browse Categories";
+      renderCategoryShelves(state.homeList);
+      updateBrowseCount();
+      return;
+    }
+
+    /* Single Category Full-Page Grid or Search Results Mode */
+    if (els.catShelves) els.catShelves.hidden = true;
+    els.channelGrid.hidden = false;
+    if (els.allCatsBtn) els.allCatsBtn.hidden = state.group === "all";
+    if (els.browseTitleText) {
+      els.browseTitleText.textContent = state.query ? "Search Results" : state.group;
+    }
+
+    if (state.group !== "all" && !state.query) {
+      showAllHomeChannels();
+    } else {
+      if (state.homeShown === 0) appendHomePage();
+      els.gridMore.hidden = state.homeShown >= state.homeList.length;
+    }
     updateBrowseCount();
   }
 
@@ -1537,7 +1664,7 @@
     }
     const token = ++state.homeRenderToken;
     els.gridMore.hidden = true;
-    const CHUNK = 100;
+    const CHUNK = 80;
 
     function step() {
       if (token !== state.homeRenderToken) return;
@@ -1580,8 +1707,13 @@
       img.loading = "lazy";
       img.decoding = "async";
       img.referrerPolicy = "no-referrer";
-      img.addEventListener("error", () => img.remove());
+      img.addEventListener("load", () => logo.classList.add("has-logo"));
+      img.addEventListener("error", () => {
+        logo.classList.remove("has-logo");
+        img.remove();
+      });
       img.src = ch.logo;
+      if (img.complete && img.naturalWidth > 0) logo.classList.add("has-logo");
       logo.appendChild(img);
     }
 
@@ -2021,6 +2153,11 @@
   }
 
   function onGridClick(e) {
+    const openCat = e.target.closest("[data-open-cat]");
+    if (openCat) {
+      openCategoryView(openCat.dataset.openCat);
+      return;
+    }
     const fav = e.target.closest("[data-fav]");
     if (fav) {
       e.preventDefault();

@@ -54,7 +54,22 @@ window.GTV_CONFIG = {
   */
   channelBackups: {},
 
-  /* ৪. অ্যাডমিন ব্র্যান্ডিং */
+  /* ৪. হোম পেজে কোন ক্যাটাগরিগুলো সবার আগে দেখাবে (ইচ্ছামতো সাজাতে পারবেন) */
+  categoryOrder: [
+    "Bangladesh",
+    "Sports",
+    "Indian Movies",
+    "Indian Entertainment",
+    "News",
+    "Kids",
+    "Indian Music",
+    "Music",
+    "Documentary & Wildlife",
+    "International",
+  ],
+  demoteCategories: ["Backup", "Review"],
+
+  /* ৫. অ্যাডমিন ব্র্যান্ডিং */
   brand: {
     name: "Galib TV",
     tagline: "LIVE OTT · বাংলা ও আন্তর্জাতিক টিভি",
