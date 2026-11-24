@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Galib TV — Web IPTV Player",
+  "name": "Galib TV — Live OTT",
   "short_name": "Galib TV",
-  "description": "A fast, free, open-source web IPTV player. Watch live TV from any M3U / M3U8 playlist in your browser — no server, no build step.",
+  "description": "Galib TV — Watch curated live TV channels in a fast, mobile-friendly OTT experience.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "./",
@@ -10,9 +10,9 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#080b10",
-  "theme_color": "#080b10",
-  "categories": ["entertainment", "video", "utilities"],
+  "background_color": "#060911",
+  "theme_color": "#060911",
+  "categories": ["entertainment", "video"],
   "icons": [
     {
       "src": "assets/icons/icon-192.png",
@@ -31,12 +31,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "assets/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
     }
   ]
 }
