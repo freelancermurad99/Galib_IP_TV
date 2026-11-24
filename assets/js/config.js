@@ -51,7 +51,6 @@ window.GTV_CONFIG = {
      - চ্যানেলের নাম লিখলেই M3U লিস্ট থেকে অটোমেটিক খুঁজে নেবে।
      - M3U কাজ না করলে বা না থাকলে `ytHandle` / `fallbackUrl` (YouTube Live) দিয়ে অটো প্লে হবে। */
   featuredChannels: [
-    { name: "T Sports", match: ["T Sports", "TSports", "T-Sports"], group: "Sports", ytHandle: "@TSportsbd" },
     { name: "Zee Bangla", match: ["Zee Bangla", "Zee Bangla HD"], group: "Indian Entertainment" },
     { name: "Star Jalsha", match: ["Star Jalsha", "Star Jalsha HD"], group: "Indian Entertainment" },
     { name: "Jalsha Movies", match: ["Jalsha Movies", "Jolsha Movies", "Jalsha Movies HD"], group: "Indian Movies" },
@@ -62,6 +61,7 @@ window.GTV_CONFIG = {
     { name: "DBC News", match: ["DBC News", "DBC News TV"], group: "News", ytHandle: "@dbcnewstv" },
     { name: "ATN News", match: ["ATN News", "ATN Bangla News"], group: "News", ytHandle: "@ATNBanglanews" },
     { name: "Ekattor TV", match: ["Ekattor TV", "71 TV"], group: "News", ytHandle: "@ekattor_tv" },
+    { name: "T Sports", match: ["T Sports", "TSports", "T-Sports"], group: "Sports", ytHandle: "@TSportsbd" },
   ],
 
   /* ৪. অ্যাডমিন ব্যাকআপ স্ট্রিম লিংক (M3U8 বা YouTube Live — একের পর এক ট্রাই করবে)
